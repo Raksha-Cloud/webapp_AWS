@@ -3,7 +3,7 @@ const express = require("express");
 const axios = require('axios');
 const app = express();
 
-//set my local host to port 3300
+//set my local host to port 330
 app.listen(3300,()=>{
     console.log("Server is listening on port 3300...")
 });
