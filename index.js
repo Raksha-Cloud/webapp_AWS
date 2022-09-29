@@ -10,7 +10,7 @@ app.listen(3300,()=>{
 
 app.use(express.json());
 
-//to check the health of local host 3300, and getting the status code in the format of json file
+//to check the health of local host 3300,and getting the status code in the format of json file
 
 app.get("/", (req,res)=>{
    
