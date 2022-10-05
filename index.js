@@ -44,6 +44,85 @@ app.get("/healthz", async(req,res)=>{
 })
 
 
+//get a particular id request and actions
+
+
+
+
+
+//post http request route and actions
+app.post("/v1/account",async(req,res)=>{
+    try{
+    //console.log(req.body);
+    
+    const {first_name,last_name,username,password} = req.body;
+    
+    //to check if any of the mandatory fields missing in the req body
+    if(!first_name||!last_name||!username||!password){
+        res.send({
+            status: 400,
+            msg : "One or more fields missing, Please enter correct data"
+        })
+    }
+    //to check the password length
+    else if(password.length<9){
+        res.send({
+            status: 400,
+            msg : "length of password is less than 8"
+        })
+    }
+    //to check the email pattern
+    else if(!username.includes('@')&& username.includes('.'))
+    {
+        res.send({
+            status: 400,
+            msg : "not a valid email pattern"
+        })
+    }
+    //its a valid user input and hash the password
+    else{
+        //hashing password using bcrypt with salt 10
+        const hashpwd =  await bcrypt.hash(password,10);
+    
+        //check if the username exist in the database
+       pool.query(`select * from accounts where username = $1`,[username],(err, results)=>{
+          
+            if(results.rows.length){
+                res.send({
+                    status: 400,
+                    msg : "username already exists!"
+                })  
+            }
+            //if its new user add the entry to database
+          
+                pool.query(`insert into accounts (first_name,last_name,username,password) values($1,$2,$3,$4)`, [
+                    first_name,last_name,username,hashpwd], (err,result)=>{
+                      if(err) throw err;
+    
+                      res.send({
+                                status: 201,
+                                msg : "account added successfully"
+                            })
+                        
+                    })
+            
+        })
+    }
+    
+    }catch(err){
+        console.error(err.message);
+        res.send({
+         msg: err.message
+     })
+    }
+    
+    
+    })
+    
+    //set my local host to port 3300
+    app.listen(3300,()=>{
+        console.log("Server is listening on port 3300...")
+    });
 // // set swagger url as constant
 // const URL = 'https://virtserver.swaggerhub.com/fall2022-csye6225/cloud-native-webapp/assignment-01/healthz';
 
@@ -66,77 +145,3 @@ app.get("/healthz", async(req,res)=>{
 //     }
 // })
 
-app.post("/v1/account",async(req,res)=>{
-try{
-//console.log(req.body);
-if(req.body.)
-const {first_name,last_name,username,password} = req.body;
-
-//to check if any of the mandatory fields missing in the req body
-if(!first_name||!last_name||!username||!password){
-    res.send({
-        status: 400,
-        msg : "One or more fields missing, Please enter correct data"
-    })
-}
-//to check the password length
-else if(password.length<9){
-    res.send({
-        status: 400,
-        msg : "length of password is less than 8"
-    })
-}
-//to check the email pattern
-else if(!username.includes('@')&& username.includes('.'))
-{
-    res.send({
-        status: 400,
-        msg : "not a valid email pattern"
-    })
-}
-//its a valid user input and hash the password
-else{
-    const hashpwd = bcrypt.hash(password,10);
-    //check if the username exist in the database
-    pool.query(`select * from accounts where username = $1`,[username],(err, result)=>{
-        if(err){
-            throw err;
-        }
-        if(result.rows.length >0){
-            res.send({
-                status: 400,
-                msg : "user already exists!"
-            })  
-        }
-        //if its new user add the entry to database
-        else{
-            pool.query(`insert into accounts (first_name,last_name,created_at,updated_at,username,password) values($1,$2,$3,$4,$5,$6)`, [
-                first_name,last_name,now(),now(),username,hashpwd], (err,result)=>{
-                    if(err){
-                        throw err;
-                    }
-                    else{
-                        res.send({
-                            status: 201,
-                            msg : "account added successfully"
-                        })
-                    }
-                })
-        }
-    })
-}
-
-}catch(err){
-    console.error(err.message);
-    res.send({
-     msg: err.message
- })
-}
-
-
-})
-
-//set my local host to port 3300
-app.listen(3300,()=>{
-    console.log("Server is listening on port 3300...")
-});
