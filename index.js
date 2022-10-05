@@ -275,8 +275,10 @@ app.put("/v1/account/:id", async (req, res) => {
 });
 
 //set my local host to port 3300
-app.listen(3300, () => {
+const appserver = app.listen(3300, () => {
   console.log("Server is listening on port 3300...");
 });
+
+module.exports = appserver;
 
 
