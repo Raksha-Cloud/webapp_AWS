@@ -59,7 +59,7 @@ $ git clone git@github.com:Raksha-Cloud/webapp.git
 ```
 $ cd webapp
 $ npm install
-$ node index
+$ npm run dev
 ```
 
 
