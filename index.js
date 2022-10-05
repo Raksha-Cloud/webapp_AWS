@@ -183,17 +183,15 @@ app.put("/v1/account/:id", async (req, res) => {
     //decode the basic auth
     const decoded = Buffer.from(encoded, "base64").toString("ascii");
     //split based on : to get email and password
-    const [username, password] = decoded.split(":");
-    if (!username || !password) {
+    const [username, pwd] = decoded.split(":");
+    if (!username || !pwd) {
       return res.status(401).send({
         msg: "Invalid Credentials, one or more fields empty",
       });
     }
     //check in database if the user exist
     pool.query(
-      `select * from accounts where username = $1`,
-      [username],
-      (err, results) => {
+      `select * from accounts where username = $1`,[username],(err, results) => {
         if (err) throw err;
         if (results.rows.length == 0) {
           return res.status(204).send({
@@ -201,8 +199,9 @@ app.put("/v1/account/:id", async (req, res) => {
           });
         }
         //compare if the user provided correct password
-        //console.log(results.rows[0].password);
-        const match = bcrypt.compareSync(password, results.rows[0].password);
+        console.log(results.rows[0].password);
+
+        const match = bcrypt.compareSync(pwd, results.rows[0].password);
         if (!match) {
           return res.status(401).send({
             msg: "Unauthorized, invalid credentials",
@@ -217,26 +216,56 @@ app.put("/v1/account/:id", async (req, res) => {
       }
     );
 
-    const rid = parseInt(req.params.id);
-    //check if id exist
-    pool.query(`select * from accounts where id=$1`, [rid], (err, results) => {
-      if (err) throw err;
-      else if (results.rows.length == 0) {
-        res.send({
-          msg: "No record found, please check your id and try again",
+     const rid = parseInt(req.params.id);
+    // //check if there is no id/username/created/updated fields in req body
+    if(req.body.username || req.body.created_at || req.body.updated_at || req.body.id){
+        return res.status(400).send({
+            msg: "Invalid fields requested for updating",
+          });
+    }
+
+     //update the database
+     const { first_name, last_name, password } = req.body;
+       
+     let query = `UPDATE accounts SET updated_at = NOW()`;
+     if (first_name && last_name && password) {
+       const hashedPwd = await bcrypt.hash(password, 10);
+       
+        query += `, first_name = '${first_name}', last_name = '${last_name}', password = '${hashedPwd}' `;
+        console.log(query);
+      } else if (first_name && last_name) {
+        query += `, first_name = '${first_name}', last_name = '${last_name}' `;
+      } else if (first_name && password) {
+        const hashedPwd = await bcrypt.hash(password, 10);
+        query += `, first_name = '${first_name}', password = '${hashedPwd}' `;
+      } else if (last_name && password) {
+        const hashedPwd = await bcrypt.hash(password, 10);
+        query += `, last_name = '${last_name}', password = '${hashedPwd}' `;
+      } else if (first_name) {
+        query += `, first_name = '${first_name}'`;
+      } else if (last_name) {
+        query += `, last_name = '${last_name}'`;
+      } else if (password) {
+        // has the password
+        const hashedPwd = await bcrypt.hash(password, 10);
+        query += `, password = '${hashedPwd}'`;
+      } else {
+        res.status(403).send({
+          message: 'Nothing to be modified',
         });
       }
-    });
-    //basic auth check
-
-    //check if there is no id/username/created/updated fields in req body
-
-    //check if there is no empty fields
-
-    //update the database
-
-    pool.query(``, []);
-    res.status(200).json(results.rows);
+    
+      query += ` WHERE id = '${rid}'`;
+      const data = await pool.query(query);
+      pool.query(
+        query,
+        (err, results) => {
+          if (err) throw err;
+          res.status(204).send({
+            msg : "Status 204 , no content"
+          });
+        }
+      );
   } catch (err) {
     console.error(err.message);
     res.send({
