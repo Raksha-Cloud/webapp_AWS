@@ -95,16 +95,7 @@ app.get("/v1/account/:id", async (req, res) => {
 //post http request route and actions
 app.post("/v1/account", async (req, res) => {
   try {
-    //console.log(req.body);
-    if (Object.keys(req.body).length > 4) {
-
-        return res.status(400).send({
-    
-          msg: 'Bad Request: Please check the number of parameters',
-    
-        });
-    
-      }
+   
     const { first_name, last_name, username, password } = req.body;
 
     //to check if any of the mandatory fields missing in the req body
@@ -115,7 +106,7 @@ app.post("/v1/account", async (req, res) => {
       });
     }
     //to check the password length
-    else if (password.length < 9) {
+    else if (password.length < 8) {
       return res.status(400).send({
         msg: "BAD REQUEST: length of password is less than 8",
       });
@@ -169,14 +160,15 @@ app.post("/v1/account", async (req, res) => {
   }
 });
 
+//to update an account of a particular user
 app.put("/v1/account/:id", async (req, res) => {
   try {
     const authorization = req.headers.authorization;
     if (!authorization) {
-      return res.status(401).send({
-        msg: "Please use basic auth",
-      });
-    }
+        return res.status(401).send({
+          msg: "Unauthorized: Please use basic auth",
+        });
+      }
     const encoded = authorization.substring(6);
     //decode the basic auth
     const decoded = Buffer.from(encoded, "base64").toString("ascii");
@@ -192,30 +184,27 @@ app.put("/v1/account/:id", async (req, res) => {
       `select * from accounts where username = $1`,[username],(err, results) => {
         if (err) throw err;
         if (results.rows.length == 0) {
-          return res.status(204).send({
-            msg: "user does not exist",
-          });
-        }
+            return res.status(401).send({
+              msg: "Unauthorized: user does not exist",
+            });
+          }
         //compare if the user provided correct password
-        console.log(results.rows[0].password);
-
         const match = bcrypt.compareSync(pwd, results.rows[0].password);
         if (!match) {
-          return res.status(401).send({
-            msg: "Unauthorized, invalid credentials",
-          });
-        }
+            return res.status(401).send({
+              msg: "Unauthorized: invalid credentials",
+            });
+          }
         const id = parseInt(req.params.id);
-        console.log(id);
-        console.log(results.rows[0].id);
         if (id != results.rows[0].id) {
-          return res.status(403).send({
-            msg: "Unauthorized",
-          });
-        }
+            return res.status(403).send({
+              msg: "Forbidden: Invalid ID in request",
+            });
+          }
 
         const rid = parseInt(req.params.id);
-        // //check if there is no id/username/created/updated fields in req body
+        //check if there is no id/username/created/updated fields in req body
+        //console.log(req.body);
         if(req.body.username || req.body.created_at || req.body.updated_at || req.body.id){
             return res.status(400).send({
                 msg: "Invalid fields requested for updating",
@@ -230,7 +219,6 @@ app.put("/v1/account/:id", async (req, res) => {
            const hashedPwd =  bcrypt.hash(password, 10);
            
             query += `, first_name = '${first_name}', last_name = '${last_name}', password = '${hashedPwd}' `;
-            console.log(query);
           } else if (first_name && last_name) {
             query += `, first_name = '${first_name}', last_name = '${last_name}' `;
           } else if (first_name && password) {
@@ -249,7 +237,7 @@ app.put("/v1/account/:id", async (req, res) => {
             query += `, password = '${hashedPwd}'`;
           } else {
             return res.status(403).send({
-              message: 'Nothing to be modified',
+              message: 'No updates made',
             });
           }
         
