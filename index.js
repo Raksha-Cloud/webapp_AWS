@@ -181,7 +181,7 @@ app.put("/v1/account/:id", async (req, res) => {
     }
     //check in database if the user exist
     pool.query(
-      `select * from accounts where username = $1`,[username],(err, results) => {
+      `select * from accounts where username = $1`,[username],async (err, results) => {
         if (err) throw err;
         if (results.rows.length == 0) {
             return res.status(401).send({
@@ -216,16 +216,16 @@ app.put("/v1/account/:id", async (req, res) => {
            
          let query = `UPDATE accounts SET updated_at = NOW()`;
          if (first_name && last_name && password) {
-           const hashedPwd =  bcrypt.hash(password, 10);
+           const hashedPwd =  await bcrypt.hash(password, 10);
            
             query += `, first_name = '${first_name}', last_name = '${last_name}', password = '${hashedPwd}' `;
           } else if (first_name && last_name) {
             query += `, first_name = '${first_name}', last_name = '${last_name}' `;
           } else if (first_name && password) {
-            const hashedPwd =  bcrypt.hash(password, 10);
+            const hashedPwd = await bcrypt.hash(password, 10);
             query += `, first_name = '${first_name}', password = '${hashedPwd}' `;
           } else if (last_name && password) {
-            const hashedPwd =  bcrypt.hash(password, 10);
+            const hashedPwd = await bcrypt.hash(password, 10);
             query += `, last_name = '${last_name}', password = '${hashedPwd}' `;
           } else if (first_name) {
             query += `, first_name = '${first_name}'`;
@@ -233,7 +233,7 @@ app.put("/v1/account/:id", async (req, res) => {
             query += `, last_name = '${last_name}'`;
           } else if (password) {
             // has the password
-            const hashedPwd =  bcrypt.hash(password, 10);
+            const hashedPwd = await bcrypt.hash(password, 10);
             query += `, password = '${hashedPwd}'`;
           } else {
             return res.status(403).send({
