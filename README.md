@@ -70,12 +70,15 @@ Get user information
 
 -As a user, I want to get my account information. Response payload should return all fields for the user except for password.
 
-### 3.Technology Used
+### 3.Technology and external libraries Used
 
 
 - Nodejs
 - Express
 - Postgres SQL
+- Bcrypt
+- Basic auth
+  
 
 ### 4. Prerequisites
 
