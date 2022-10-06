@@ -11,18 +11,7 @@ describe('Server health check', () => {
     expect(response.statusCode).to.equal(200);
   });
 });
-//testing valid post request
-describe('To test valid Post request ', () => {
-  it('POST /account', async () => {
-    const response = await request(server).post('/v1/account').send({
-      first_name: 'Raksha',
-      last_name: 'Kagadalu',
-      username: 'testtd@abc.com',
-      password: 'password12',
-    });
-    expect(response.statusCode).to.equal(201);
-  });
-});
+
 
 //test valid password
 describe('To test valid password in the Post request ', () => {
