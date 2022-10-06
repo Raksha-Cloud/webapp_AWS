@@ -17,7 +17,7 @@ describe('To test valid Post request ', () => {
     const response = await request(server).post('/v1/account').send({
       first_name: 'Raksha',
       last_name: 'Kagadalu',
-      username: 'abcd@abc.com',
+      username: 'testtd@abc.com',
       password: 'password12',
     });
     expect(response.statusCode).to.equal(201);
