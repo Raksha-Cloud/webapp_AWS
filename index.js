@@ -5,7 +5,7 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const cors = require('cors');
 
-
+//setting up the app with dependencies
 const app = express();
 app.use(bodyParser.json());
 app.use(morgan("combined"));
