@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const db = require('../db.js');
 
-const User = db.define('test', {
+const User = db.define('accounts', {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -12,8 +12,8 @@ const User = db.define('test', {
         allowNull: false,
         validate: {
             len: {
-                args: [1,32],
-                msg: "Input length should be between 6 to 32 "
+                args: [3,32],
+                msg: "Input length should be between 3 to 32 "
            }
           }
         
@@ -23,8 +23,8 @@ const User = db.define('test', {
         allowNull: false,
         validate: {
             len: {
-                args: [1,32],
-                msg: "Input length should be between 6 to 32 "
+                args: [3,32],
+                msg: "Input length should be between 3 to 32 "
            }
           }
     },
@@ -38,7 +38,7 @@ const User = db.define('test', {
                 msg: 'Invalid email pattern'
             },
             len: {
-                args: [1,32],
+                args: [6,32],
                 msg: "Input length should be between 6 to 32 "
            }
           },

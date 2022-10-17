@@ -12,6 +12,12 @@ var accountController = {
 //function to add a new account into the db
 function addAccount(req, res) {
   let acc = req.body;
+  if(acc.password.length<8)
+  {
+    res.status(400).send({
+        msg: "Password length is less than 8"
+      });
+  }
   //hashing the password
   bcrypt.hash(acc.password, 10).then(function (hash) {
     // Store hash in your password DB.
@@ -85,7 +91,10 @@ function findAccountById(req, res) {
                   });
                 })
                 .catch((error) => {
-                  console.log(error);
+                 // console.log(error);
+                  res.status(400).send({
+                    msg: error.errors[0].message,
+                  });
                 });
             } else {
               // when user is trying to access some other account
@@ -109,7 +118,7 @@ function findAccountById(req, res) {
       }
     })
     .catch((error) => {
-      console.log(error);
+      //console.log(error);
       res.status(400).send({
         msg: error.errors[0].message,
       });
@@ -168,7 +177,10 @@ function updateAccount(req, res) {
                       res.status(204).send();
                     })
                     .catch((error) => {
-                      console.log(error);
+                      //console.log(error);
+                      res.status(400).send({
+                        msg: error.errors[0].message,
+                      });
                     });
                 });
               }
@@ -179,7 +191,10 @@ function updateAccount(req, res) {
                   res.status(204).send();
                 })
                 .catch((error) => {
-                  console.log(error);
+                 // console.log(error);
+                  res.status(400).send({
+                    msg: error.errors[0].message,
+                  });
                 });
             } else {
               // when user is trying to access some other account
@@ -203,7 +218,7 @@ function updateAccount(req, res) {
       }
     })
     .catch((error) => {
-      console.log(error);
+      //console.log(error);
       res.status(400).send({
         msg: error.errors[0].message,
       });

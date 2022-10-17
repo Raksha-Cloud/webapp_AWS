@@ -29,11 +29,15 @@ app.get("/healthz",  (req, res) => {
 });
 
 //setting up the port and syncing the db
-const PORT = 3300;
-database.sync().then(() => {
-    app.listen(PORT, console.log(`Server started on port ${PORT}`));
-}).catch(err => console.log("Error: " + err));
+// const PORT = 3300;
+// database.sync().then(() => {
+//   const appserver = app.listen(PORT, console.log(`Server started on port ${PORT}`));
+//      module.exports = appserver;
+// }).catch(err => console.log("Error: " + err));
 
+// const PORT = 3300;
+//   const appserver = app.listen(PORT, console.log(`Server started on port ${PORT}`));
+//      module.exports = appserver;
 
 
 //==========================api without orm =============================================================================================
@@ -293,11 +297,11 @@ database.sync().then(() => {
 
 //set my local host to port 3300
 
+database.sync({force: true})
+const appserver = app.listen(3300, () => {
+  console.log("Server is listening on port 3300...");
+});
+module.exports = appserver;
 
-// const appserver = app.listen(3300, () => {
-//   console.log("Server is listening on port 3300...");
-// });
-
-// module.exports = appserver;
 
 
