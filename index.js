@@ -3,11 +3,8 @@ const database = require("./db.js");
 const express = require("express");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
 const cors = require('cors');
-// const { response, request } = require("express");
-// const pool = require("./db.js");
-const basicAuth = require("express-basic-auth");
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -23,8 +20,23 @@ database.authenticate().then(() => {
   console.log('Error: ' + err);
 })
 
+//api to check the health
+app.get("/healthz",  (req, res) => {
+ 
+     res.status(200).send({
+    
+     })
+});
+
+//setting up the port and syncing the db
+const PORT = 3300;
+database.sync().then(() => {
+    app.listen(PORT, console.log(`Server started on port ${PORT}`));
+}).catch(err => console.log("Error: " + err));
 
 
+
+//==========================api without orm =============================================================================================
 
 //to check the health of local host 3300,and getting the status code in the format of json file
 
@@ -280,14 +292,6 @@ database.authenticate().then(() => {
 // });
 
 //set my local host to port 3300
-
-const PORT = 3300;
-database.sync().then(() => {
-    app.listen(PORT, console.log(`Server started on port ${PORT}`));
-}).catch(err => console.log("Error: " + err));
-
-
-
 
 
 // const appserver = app.listen(3300, () => {
