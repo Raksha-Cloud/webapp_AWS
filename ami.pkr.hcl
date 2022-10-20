@@ -23,7 +23,7 @@ variable "subnet_id" {
 
 # https://www.packer.io/plugins/builders/amazon/ebs
 source "amazon-ebs" "my-ami" {
-  ami_users       = ["906950779573"]
+  ami_users       = ["906950779573","326684742220"]
   region          = "us-east-1"
   ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
   ami_description = "AMI for CSYE 6225"
