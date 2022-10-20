@@ -28,6 +28,12 @@ app.get("/healthz",  (req, res) => {
      })
 });
 
+database.sync({force:true})
+const appserver = app.listen(3300, () => {
+  console.log("Server is listening on port 3300...");
+});
+module.exports = appserver;
+
 //setting up the port and syncing the db
 // const PORT = 3300;
 // database.sync().then(() => {
@@ -297,11 +303,7 @@ app.get("/healthz",  (req, res) => {
 
 //set my local host to port 3300
 
-database.sync({force: true})
-const appserver = app.listen(3300, () => {
-  console.log("Server is listening on port 3300...");
-});
-module.exports = appserver;
+
 
 
 

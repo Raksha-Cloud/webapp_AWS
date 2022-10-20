@@ -1,0 +1,38 @@
+name: Run packer Validation and webapp Test Cases
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:     
+
+  validateAndBuild:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [16.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
+    steps:
+    - uses: actions/checkout@v3
+    - run: pwd
+    - run: ls
+    
+    - name: Validate Template
+      uses: hashicorp/packer-github-actions@master
+      with:
+          command: validate
+          arguments: -syntax-only          
+          target:  ami.pkr.hcl
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm test
+
+
