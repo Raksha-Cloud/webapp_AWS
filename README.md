@@ -151,6 +151,7 @@ $ npm run test
 -  `aws cloudformation create-stack --stack-name demoTest2 --template-body file://csye6225-infra.yml --parameter ParameterKey=VpcCidrBlock,ParameterValue="10.0.0.0/16" ParameterKey=subnet1CidrBlock,ParameterValue="10.0.13.0/24" ParameterKey=subnet2CidrBlock,ParameterValue="10.0.12.0/24" ParameterKey=subnet3CidrBlock,ParameterValue="10.0.11.0/24" ParameterKey=AmiID,ParameterValue="ami-0b5eecc082105be6b" `
   
 -  `public_ip_address:3300/healthz`
+-  .
 
 
 
