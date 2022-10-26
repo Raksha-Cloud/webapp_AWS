@@ -72,6 +72,7 @@ build {
   }
 
   provisioner "shell" {
+  ;;;;
     scripts = ["shellCommands.sh"]
   }
 
