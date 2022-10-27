@@ -188,12 +188,11 @@ $ npm run test
 #### 3. DELETE http://`IP address of EC2`:3300/v1/document/uuid
 - Select Delete request - and select basic auth enter user credentials and click on send to delete a particular document for a particular user
 
-##### Instructions to test POSTGRES DB through CLI
+#### Instructions to test POSTGRES DB through CLI
 - To run psql : `sudo -u postgres psql`
 - To see all Tables : `\d`
 - To see all databases : `\l`
 - To see all users from accounts table: `SELECT * FROM accounts;`
 - To see all documents from files table:`SELECT * FROM files;`
 - To exit `\q`
-- 
 ------------------------------------------------------------
