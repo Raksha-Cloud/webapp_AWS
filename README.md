@@ -154,9 +154,9 @@ $ npm run test
   
 ------------------------------------------------------------
 
-#### Assignment 5:
+### Assignment 5:
 
-##### Endpoint requirements- 
+#### Endpoint requirements- 
 
 - The user should be able to upload multiple documents.
 - The user should be able to delete documents. 
@@ -167,25 +167,25 @@ $ npm run test
 - Verify users cannot update/delete other users' documents.
 - Create multiple accounts to verify this.
 
-##### Changes Made- 
+#### Changes Made- 
   - updated shell commands to remove postgres installation
   - Set up env file in webapp.service
   - Added new S3 provider to access
   - Used multer and sdk dependencies to upload documents on S3
 
-##### Instructions to test S3 endpoints
+#### Instructions to test S3 endpoints
 
-#### 1. POST http://`IP address of EC2`:3300/v1/document 
+##### 1. POST http://`IP address of EC2`:3300/v1/document 
 - Select POST request - and select basic auth enter user credentials and body form data select file and upload required file from local and click on send
 
-#### 2. GET http://`IP address of EC2`:3300/v1/document
+##### 2. GET http://`IP address of EC2`:3300/v1/document
 - Select Get request - and select basic auth enter user credentials and click on send to see all the documents uploaded for a particular user
 
-#### 3. GET http://`IP address of EC2`:3300/v1/document/uuid
+##### 3. GET http://`IP address of EC2`:3300/v1/document/uuid
 - Select Get request - and select basic auth enter user credentials and click on send to see particular documents uploaded for a particular user
 
 
-#### 3. DELETE http://`IP address of EC2`:3300/v1/document/uuid
+##### 4. DELETE http://`IP address of EC2`:3300/v1/document/uuid
 - Select Delete request - and select basic auth enter user credentials and click on send to delete a particular document for a particular user
 
 #### Instructions to test POSTGRES DB through CLI
