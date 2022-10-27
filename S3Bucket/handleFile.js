@@ -1,8 +1,9 @@
+import AWS from 'aws-sdk';
 const fs = require("fs");
-const S3 = require("aws-sdk/clients/s3");
+// const S3 = require("aws-sdk/clients/s3");
 require('dotenv').config();
 
-
+AWS.config.region = process.env.AWS_REGION;
 const s3Functions = {
   uploadFile: uploadFile,
   deleteFile: deleteFile,
@@ -21,7 +22,7 @@ const s3Functions = {
 // const s3 = new AWS.S3();
 // or s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
-const s3 = new S3();
+const s3 = new AWS.S3();
 const bucketName = process.env.AWS_BUCKET_NAME;
 
 // method to check if the document exist int the s3 bucket
