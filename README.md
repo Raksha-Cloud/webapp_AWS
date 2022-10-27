@@ -195,5 +195,4 @@ $ npm run test
 - To see all users from accounts table: `SELECT * FROM accounts;`
 - To see all documents from files table:`SELECT * FROM files;`
 - To exit `\q`
-- 
 ------------------------------------------------------------
