@@ -2,9 +2,9 @@ const accountAccess = require("../Middleware/dataAccessObjects.js");
 const fileAccess = require('../Middleware/fileAccessObjects.js');
 const s3 = require('../S3Bucket/handleFile.js');
 const bcrypt = require('bcrypt');
-// const fs = require('fs');
-// const util = require('util');
-// const unlinkFile = util.promisify(fs.unlink);
+const fs = require('fs');
+ const util = require('util');
+ const unlinkFile = util.promisify(fs.unlink);
 
 const fileController = {
   uploadDoc: uploadDoc,
@@ -16,6 +16,13 @@ const fileController = {
 
 // an async function to upload any document on s3 bucket
 async function uploadDoc(req, res) {
+  //check if the req body has file
+  const fileData = req.file;
+  if (!fileData) {
+    res.status(400).send({
+      msg: 'Bad Request! File data not found',
+    });
+  }
   //extract the authentication code from header
   const authorization = req.headers.authorization;
   //if no auth throw error
@@ -57,30 +64,33 @@ async function uploadDoc(req, res) {
           };
           //console.log(uploadDocDetails);
           const data = await fileAccess.createFile(uploadDocDetails);
-          console.log("post data")
-          console.log(data.dataValues.doc_id);
-          res.status(204).send({
-            doc_id: data.dataValues.doc_id,
-            user_id: data.dataValues.user_id,
-            name: data.dataValues.name,
-            s3_bucket_path: data.dataValues.s3_bucket_path,
-            date_created: data.dataValues.date_created,
-          });
+          await unlinkFile(theFile.path);
+          return res.status(201).send(data);
+          // const data = await fileAccess.createFile(uploadDocDetails);
+          // console.log("post data")
+          // console.log(data.dataValues.doc_id);
+          // res.status(204).send({
+          //   doc_id: data.dataValues.doc_id,
+          //   user_id: data.dataValues.user_id,
+          //   name: data.dataValues.name,
+          //   s3_bucket_path: data.dataValues.s3_bucket_path,
+          //   date_created: data.dataValues.date_created,
+          // });
         } else {
           // password doesn't match
-          res.status(401).send({
-            msg: 'Invalid credentials',
+          return res.status(401).send({
+            msg: 'Authorization errror! Invalid credentials',
           });
         }
       } else {
         // user not found
-        res.status(401).send({
-          msg: 'User not found',
+        return res.status(401).send({
+          msg: 'Authorization errror! User not found',
         });
       }
     } catch (err) {
       console.log(err);
-      res.status(400).send({ msg: err.errors[0].message });
+      return res.status(400).send({ msg: err.errors[0].message });
     }
   }
 }
@@ -123,39 +133,39 @@ async function getDocument(req, res) {
             const reqID = req.params.id;
             const getDocDetails = await fileAccess.getFile(reqID);
            if(getDocDetails){
-            res.status(200).send(getDocDetails);
+           return  res.status(200).send(getDocDetails);
            }
            else{
-            res.status(403).send({
+            return res.status(403).send({
               msg: 'Forbidden, cannot access other users document',
             });
            }
            
           } else {
-            res.status(403).send({
+           return res.status(403).send({
               msg: 'Forbidden, cannot access other users document',
             });
           }
         } catch (error) {
-          res.status(403).send({
+          return res.status(403).send({
             msg: 'Forbidden, cannot access other users document',
           });
         }
       } else {
         // password doesn't match
-        res.status(401).send({
+        return res.status(401).send({
           msg: 'Invalid credentials',
         });
       }
     } else {
       // user not found
-      res.status(401).send({
+      return res.status(401).send({
         msg: 'User not found',
       });
     }
   } catch (err) {
     console.log(err);
-    res.status(400).send({ msg: err.errors[0].message });
+    return res.status(403).send({ msg: err.errors[0].message });
   }
 }
 }
@@ -191,30 +201,34 @@ if (!username || !pass) {
       // check if the passwords are matching
       if (isMatch) {
         try {
-          // delete the file from the database
-          //console.log(result.id);
           const getDocDetails = await fileAccess.getAllFiles(result.id);
+          console.log(getDocDetails)
+          if(getDocDetails.length==0){
+            return res.status(403).send({
+              msg: 'Forbidden! User has no documents / File not found',
+            });
+          }
           res.status(200).send(getDocDetails);
         } catch (error) {
-          res.status(404).send({
+          return res.status(403).send({
             msg: 'User has no documents / File not found',
           });
         }
       } else {
         // password doesn't match
-        res.status(401).send({
-          msg: 'Invalid credentials',
+        return res.status(401).send({
+          msg: 'Unauthoried! Invalid credentials',
         });
       }
     } else {
       // user not found
-      res.status(401).send({
+      return res.status(401).send({
         msg: 'User not found',
       });
     }
   } catch (err) {
     console.log(err);
-    res.status(400).send({ msg: err });
+    return res.status(403).send({ msg: err });
   }
 }
 }
@@ -256,7 +270,7 @@ async function deleteDocument(req, res) {
               // delete the file from s3
               try {
                 const image = await fileAccess.getFile(req.params.id);
-                if (image) {
+                if (image && image.user_id === result.id) {
                   const fileName = image.s3_bucket_path.split('/').pop();
                   //console.log(fileName);
                   const deleteDoc = await s3.deleteFile(fileName);
@@ -264,39 +278,39 @@ async function deleteDocument(req, res) {
                   const deleteDocFromDatabase = await fileAccess.deleteFile(
                     req.params.id
                   );
-                  res.status(204).send({
-                    msg: 'File deleted',
+                  return res.status(204).send({
+                    msg: 'Document deleted',
                   });
                 } else {
-                  res.status(404).send({
-                    msg: 'Requested file not found',
+                  return res.status(404).send({
+                    msg: 'Requested Document not found',
                   });
                 }
               } catch (err) {
-                res.status(400).send({ msg: err });
+                return res.status(404).send({ msg: err });
               }
             } else {
-              res.status(404).send({
-                msg: 'User has no files',
+              return res.status(404).send({
+                msg: 'User has no documents',
               });
             }
           } catch (error) {
-            re.status(404).send(error);
+            return res.status(404).send(error);
           }
         } else {
           // password doesn't match
-          res.status(401).send({
-            msg: 'Invalid credentials',
+          return res.status(401).send({
+            msg: 'Unauthorized! Invalid credentials',
           });
         }
       } else {
         // user not found
-        res.status(401).send({
+        return res.status(404).send({
           msg: 'User not found',
         });
       }
     } catch (err) {
-      res.status(400).send(err);
+      return res.status(404).send(err);
     }
   }
 }
