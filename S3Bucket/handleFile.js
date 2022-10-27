@@ -3,17 +3,17 @@ const fs = require("fs");
  const AWS = require("aws-sdk");
 require('dotenv').config();
 
-// AWS.config.region = process.env.AWS_REGION;
+AWS.config.region = process.env.AWS_REGION;
 const s3Functions = {
   uploadFile: uploadFile,
   deleteFile: deleteFile,
   fileExists: fileExists,
 };
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_ACCESS_SECRET,
-  region: 'us-east-1',
-});
+//AWS.config.update({
+//   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+//   secretAccessKey: process.env.AWS_ACCESS_SECRET,
+//   region: 'us-east-1',
+// });
 
 
 // const AWS = require('aws-sdk');
