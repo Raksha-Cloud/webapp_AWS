@@ -196,3 +196,8 @@ $ npm run test
 - To see all documents from files table:`SELECT * FROM files;`
 - To exit `\q`
 ------------------------------------------------------------
+
+### Assignment 6:
+- Replaced ec2 ip address with domain name and auto directed all requests to port 3300
+- Created domain and sub domains added to route 53
+- created ses identity to send emails
