@@ -20,6 +20,15 @@ database.authenticate().then(() => {
   console.log('Error: ' + err);
 })
 
+//api to check the domain
+app.get("/",  (req, res) => {
+ 
+  res.status(200).send({
+  msg : "welcome to Cloud course",
+  })
+});
+
+
 //api to check the health
 app.get("/healthz",  (req, res) => {
  

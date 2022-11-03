@@ -20,17 +20,26 @@ variable "subnet_id" {
   default = "subnet-08e78a1d44cd02b9c"
 }
 
+variable "ami_user1" {
+  type    = string
+  default = "906950779573"
+}
+
+variable "ami_user2" {
+  type    = string
+  default = "326684742220"
+}
 
 # https://www.packer.io/plugins/builders/amazon/ebs
 source "amazon-ebs" "my-ami" {
-  ami_users       = ["906950779573","326684742220"]
-  region          = "us-east-1"
+  ami_users       = ["${var.ami_user1}","${var.ami_user2}"]
+  region          = "${var.aws_region}"
   ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
   ami_description = "AMI for CSYE 6225"
   instance_type   = "t2.micro"
-  source_ami      = "ami-08c40ec9ead489470"
-  ssh_username    = "ubuntu"
-  subnet_id       = "subnet-08e78a1d44cd02b9c"
+  source_ami      = "${var.source_ami}"
+  ssh_username    = "${var.ssh_username}"
+  subnet_id       = "${var.subnet_id}"
   ami_regions = [
     "us-east-1",
   ]
