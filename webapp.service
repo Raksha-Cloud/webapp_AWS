@@ -7,6 +7,7 @@ Environment = NODE_PORT = 3001
 Type=simple
 User=ubuntu
 ExecStart=/usr/bin/node /home/ubuntu/index.js
+ExecStartPost=sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 3300
 Restart=always
 RestartSec =10
 StandardOutput=syslog
