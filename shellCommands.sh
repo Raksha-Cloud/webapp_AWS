@@ -17,12 +17,12 @@ whoami
 unzip webapp.zip
 sudo rm -rf webapp.zip
 # Copying cloudwatch agent config file
- echo "###################################Copying the cloudwatch agent config file to /opt/cloudwatch-config.json##################"
- sudo cp /home/ubuntu/webapp/cloudwatch-agent-config.json /opt/cloudwatch-config.json
+ echo "###################################Copying the cloudwatch agent config file to /opt/cloudwatch-agent-config.json##################"
+ sudo cp /home/ubuntu/webapp/cloudwatch-agent-config.json /opt/cloudwatch-agent-config.json
 
  # Configuring CloudWatch Agent
  echo "######################################Configuring CloudWatch Agent#######################################################"
- sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-config.json -s
+ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-agent-config.json -s
 
  sudo mkdir -p /home/ubuntu/webapp/logs
  sudo touch /home/ubuntu/webapp/logs/csye6225.log
