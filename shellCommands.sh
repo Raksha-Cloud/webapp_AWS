@@ -26,9 +26,9 @@ pwd
  echo "######################################Configuring CloudWatch Agent#######################################################"
  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-agent-config.json -s
 
- sudo mkdir -p /home/ubuntu/webapp/logs
- sudo touch /home/ubuntu/webapp/logs/csye6225.log
- sudo chmod 775 /home/ubuntu/webapp/logs/csye6225.log
+ sudo mkdir -p /home/ubuntu/logs
+ sudo touch /home/ubuntu/logs/csye6225.log
+ sudo chmod 775 /home/ubuntu/logs/csye6225.log
 
 echo "############################################ unzip done #########################################################"
 ls -lrta
