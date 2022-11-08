@@ -4,6 +4,9 @@ const express = require("express");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const cors = require('cors');
+const appLogger = require('./config/logger-config.js');
+const lynx = require('lynx');
+const metrics = new lynx('localhost', 8125);
 
 //setting up the app with dependencies
 const app = express();
@@ -16,8 +19,10 @@ app.use('/', require('./Routes/route.js'));
 //Database Connection
 database.authenticate().then(() => {
   console.log('Database connected...');
+  appLogger.info('Database connected...');
 }).catch(err => {
   console.log('Error: ' + err);
+  appLogger.error('Error: ' + err);
 })
 
 //api to check the domain
@@ -31,10 +36,9 @@ app.get("/",  (req, res) => {
 
 //api to check the health
 app.get("/healthz",  (req, res) => {
- 
-     res.status(200).send({
-    
-     })
+      metrics.increment('GET/Healthz API');
+      appLogger.info('Healthz check GET - OK')
+      res.status(200).send({ msg: res.statusCode,})
 });
 
 //setting up the port and syncing the db
@@ -316,8 +320,11 @@ database
   .sync()
   .then(() => {
     app.listen(process.env.PORT || 3300, console.log("Server is listening on port 3300..."));
+    appLogger.info('Server is listening on port 3300...');
   })
-  .catch((err) => console.log('Error: ' + err));
+  .catch((err) => {
+    appLogger.error('Error: ' + err);
+    console.log('Error: ' + err)});
 
 module.exports = app;
 
