@@ -7,7 +7,7 @@ const util = require('util');
 const unlinkFile = util.promisify(fs.unlink);
 const lynx = require('lynx');
 const metrics = new lynx('localhost', 8125);
-const appLogger = require('./config/logger-config.js');
+const appLogger = require('../config/logger-config.js');
 
 const fileController = {
   uploadDoc: uploadDoc,

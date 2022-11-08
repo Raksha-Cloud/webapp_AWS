@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const basicAuth = require("express-basic-auth");
 const lynx = require('lynx');
 const metrics = new lynx('localhost', 8125);
-const appLogger = require('./config/logger-config.js');
+const appLogger = require('../config/logger-config.js');
 
 //define all the methods
 var accountController = {
