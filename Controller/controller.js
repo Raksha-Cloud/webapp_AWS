@@ -1,6 +1,9 @@
 const accountAccess = require("../Middleware/dataAccessObjects.js");
 const bcrypt = require("bcrypt");
 const basicAuth = require("express-basic-auth");
+const lynx = require('lynx');
+const metrics = new lynx('localhost', 8125);
+const appLogger = require('./config/logger-config.js');
 
 //define all the methods
 var accountController = {
@@ -11,18 +14,24 @@ var accountController = {
 
 //function to add a new account into the db
 function addAccount(req, res) {
+  metrics.increment('POST/v1/account API');
   let acc = req.body;
+  appLogger.info('Checking password length')
   if(acc.password.length<8)
   {
+    appLogger.info('Password length is less than 8')
     res.status(400).send({
         msg: "Password length is less than 8"
       });
   }
+
+  appLogger.info('Hashing the password')
   //hashing the password
   bcrypt.hash(acc.password, 10).then(function (hash) {
     // Store hash in your password DB.
     acc.password = hash;
     //if all the schema checks pass the record is added to db and response is shared without password field
+    appLogger.info('Account added to db and response is shared')
     accountAccess
       .create(acc)
       .then((data) => {
@@ -37,6 +46,7 @@ function addAccount(req, res) {
       })
       //if any of the validation check fails error is displayed
       .catch((error) => {
+        appLogger.error(error)
         console.log(error);
         res.status(400).send({
           msg: error.errors[0].message,
@@ -48,6 +58,7 @@ function addAccount(req, res) {
 //function to find an account in db
 function findAccountById(req, res) {
     //extract the authentication code from header
+  metrics.increment('GET/v1/account/:id API');
   const authorization = req.headers.authorization;
   //if no auth throw error
   if (!authorization) {
@@ -128,6 +139,7 @@ function findAccountById(req, res) {
 //function to update an account in db
 function updateAccount(req, res) {
   //checking if there is read only fields in request body
+  metrics.increment('PUT/v1/account/:id API');
   if (
     req.body.username ||
     req.body.created_at ||

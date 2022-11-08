@@ -3,8 +3,11 @@ const fileAccess = require('../Middleware/fileAccessObjects.js');
 const s3 = require('../S3Bucket/handleFile.js');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
- const util = require('util');
- const unlinkFile = util.promisify(fs.unlink);
+const util = require('util');
+const unlinkFile = util.promisify(fs.unlink);
+const lynx = require('lynx');
+const metrics = new lynx('localhost', 8125);
+const appLogger = require('./config/logger-config.js');
 
 const fileController = {
   uploadDoc: uploadDoc,
@@ -16,6 +19,7 @@ const fileController = {
 
 // an async function to upload any document on s3 bucket
 async function uploadDoc(req, res) {
+  metrics.increment('POST/v1/document API');
   //check if the req body has file
   const fileData = req.file;
   if (!fileData) {
@@ -96,6 +100,7 @@ async function uploadDoc(req, res) {
 }
 // an async function to get any particular document on s3 bucket
 async function getDocument(req, res) {
+  metrics.increment('GET/v1/document/:id API');
   //extract the authentication code from header
   const authorization = req.headers.authorization;
   //if no auth throw error
@@ -171,6 +176,7 @@ async function getDocument(req, res) {
 }
 // an async function to get all documents for an user on s3 bucket
 async function getAllDocument(req, res) {
+  metrics.increment('GET/v1/document/ API');
 //extract the authentication code from header
 const authorization = req.headers.authorization;
 //if no auth throw error
@@ -234,6 +240,7 @@ if (!username || !pass) {
 }
 // an async function to delete any document on s3 bucket
 async function deleteDocument(req, res) {
+  metrics.increment('DELETE/v1/document/:id API');
    //extract the authentication code from header
    const authorization = req.headers.authorization;
    //if no auth throw error
