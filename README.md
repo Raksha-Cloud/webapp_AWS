@@ -203,4 +203,10 @@ $ npm run test
 - created ses identity to send emails.
 
 
-### Assignment 7: .
+### Assignment 7: 
+- installed cloud watch agent on ec2 instance and configured it
+- Added cloudwatch policy to IAM role in CFT
+- started the cloud watch agent on launch
+- installed winston and winston cloud watch to log and push the logs to cloud watch agent
+- installed lynx for statsd metrics to count the number of times an api was called
+- updated API's with logging and metrics
