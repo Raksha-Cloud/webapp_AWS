@@ -7,7 +7,7 @@ const cors = require('cors');
 const appLogger = require('./config/logger-config.js');
 const lynx = require('lynx');
 const metrics = new lynx('localhost', 8125);
-const timer = metrics.createTimer('index.timer');
+
 
 //setting up the app with dependencies
 const app = express();
@@ -36,6 +36,7 @@ app.get("/",  (req, res) => {
 
 //api to check the health
 app.get("/healthz",  (req, res) => {
+  const timer = metrics.createTimer('GET/Healthz API timer');
       metrics.increment('GET/Healthz API');
       appLogger.info('Healthz check GET - OK')
       timer.stop();
