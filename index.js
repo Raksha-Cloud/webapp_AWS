@@ -7,6 +7,7 @@ const cors = require('cors');
 const appLogger = require('./config/logger-config.js');
 const lynx = require('lynx');
 const metrics = new lynx('localhost', 8125);
+const timer = metrics.createTimer('index.timer');
 
 //setting up the app with dependencies
 const app = express();
@@ -27,7 +28,6 @@ database.authenticate().then(() => {
 
 //api to check the domain
 app.get("/",  (req, res) => {
- 
   res.status(200).send({
   msg : "welcome to Cloud course",
   })
@@ -38,6 +38,7 @@ app.get("/",  (req, res) => {
 app.get("/healthz",  (req, res) => {
       metrics.increment('GET/Healthz API');
       appLogger.info('Healthz check GET - OK')
+      timer.stop();
       res.status(200).send({ msg: res.statusCode,})
 });
 
