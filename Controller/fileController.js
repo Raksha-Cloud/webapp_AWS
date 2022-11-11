@@ -19,11 +19,13 @@ const fileController = {
 
 // an async function to upload any document on s3 bucket
 async function uploadDoc(req, res) {
+  const timer = metrics.createTimer('POST/v1/document API');
   metrics.increment('POST/v1/document API');
   //check if the req body has file
   const fileData = req.file;
   if (!fileData) {
     appLogger.info('Bad Request! File data not found')
+    timer.stop();
     res.status(400).send({
       msg: 'Bad Request! File data not found',
     });
@@ -33,6 +35,7 @@ async function uploadDoc(req, res) {
   //if no auth throw error
   if (!authorization) {
     appLogger.info('Unauthorized, Please use basic auth')
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized: Please use basic auth",
     });
@@ -47,6 +50,7 @@ async function uploadDoc(req, res) {
   //if there is no username or password field in auth throw error
   if (!username || !pass) {
     appLogger.info('Unauthorized, Invalid Credentials, one or more fields empty')
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized :Invalid Credentials, one or more fields empty",
     });
@@ -73,6 +77,7 @@ async function uploadDoc(req, res) {
           //console.log(uploadDocDetails);
           const data = await fileAccess.createFile(uploadDocDetails);
           await unlinkFile(theFile.path);
+          timer.stop();
           return res.status(201).send(data);
           // const data = await fileAccess.createFile(uploadDocDetails);
           // console.log("post data")
@@ -87,6 +92,7 @@ async function uploadDoc(req, res) {
         } else {
           // password doesn't match
           appLogger.info('Authorization error! Invalid credentials')
+          timer.stop();
           return res.status(401).send({
             msg: 'Authorization error! Invalid credentials',
           });
@@ -94,6 +100,7 @@ async function uploadDoc(req, res) {
       } else {
         // user not found
         appLogger.info('Authorization error! User not found')
+        timer.stop();
         return res.status(401).send({
           msg: 'Authorization error! User not found',
         });
@@ -101,18 +108,21 @@ async function uploadDoc(req, res) {
     } catch (err) {
       appLogger.error(err)
       console.log(err);
+      timer.stop();
       return res.status(400).send({ msg: err.errors[0].message });
     }
   }
 }
 // an async function to get any particular document on s3 bucket
 async function getDocument(req, res) {
+  const timer = metrics.createTimer('GET/v1/document/id API');
   metrics.increment('GET/v1/document/id API');
   //extract the authentication code from header
   const authorization = req.headers.authorization;
   //if no auth throw error
   if (!authorization) {
     appLogger.info('Unauthorized, Please use basic auth')
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized: Please use basic auth",
     });
@@ -127,6 +137,7 @@ async function getDocument(req, res) {
   //if there is no username or password field in auth throw error
   if (!username || !pass) {
     appLogger.info('Unauthorized, Invalid Credentials, one or more fields empty')
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized :Invalid Credentials, one or more fields empty",
     });
@@ -149,10 +160,12 @@ async function getDocument(req, res) {
             const getDocDetails = await fileAccess.getFile(reqID);
            if(getDocDetails){
             appLogger.info('Displaying the documents')
+            timer.stop();
            return  res.status(200).send(getDocDetails);
            }
            else{
             appLogger.info('Forbidden, cannot access other users document')
+            timer.stop();
             return res.status(403).send({
               msg: 'Forbidden, cannot access other users document',
             });
@@ -160,12 +173,14 @@ async function getDocument(req, res) {
            
           } else {
             appLogger.info('Forbidden, cannot access other users document')
+            timer.stop();
            return res.status(403).send({
               msg: 'Forbidden, cannot access other users document',
             });
           }
         } catch (error) {
           appLogger.error('Forbidden, cannot access other users document')
+          timer.stop();
           return res.status(403).send({
             msg: 'Forbidden, cannot access other users document',
           });
@@ -173,6 +188,7 @@ async function getDocument(req, res) {
       } else {
         // password doesn't match
         appLogger.info('Invalid credentials')
+        timer.stop();
         return res.status(401).send({
           msg: 'Invalid credentials',
         });
@@ -180,6 +196,7 @@ async function getDocument(req, res) {
     } else {
       // user not found
       appLogger.info('User not found')
+      timer.stop();
       return res.status(401).send({
         msg: 'User not found',
       });
@@ -187,18 +204,21 @@ async function getDocument(req, res) {
   } catch (err) {
     console.log(err);
     appLogger.error(err)
+    timer.stop();
     return res.status(403).send({ msg: err.errors[0].message });
   }
 }
 }
 // an async function to get all documents for an user on s3 bucket
 async function getAllDocument(req, res) {
+  const timer = metrics.createTimer('GET/v1/document/ API');
   metrics.increment('GET/v1/document/ API');
 //extract the authentication code from header
 const authorization = req.headers.authorization;
 //if no auth throw error
 if (!authorization) {
   appLogger.info('Unauthorized, Please use basic auth')
+  timer.stop();
   return res.status(401).send({
     msg: "Unauthorized: Please use basic auth",
   });
@@ -213,6 +233,7 @@ const [username, pass] = decoded.split(":");
 //if there is no username or password field in auth throw error
 if (!username || !pass) {
   appLogger.info('Unauthorized, Invalid Credentials, one or more fields empty')
+  timer.stop();
   return res.status(401).send({
     msg: "Unauthorized :Invalid Credentials, one or more fields empty",
   });
@@ -231,15 +252,18 @@ if (!username || !pass) {
           console.log(getDocDetails)
           if(getDocDetails.length==0){
             appLogger.info('Forbidden! User has no documents / File not found')
+            timer.stop();
             return res.status(403).send({
               msg: 'Forbidden! User has no documents / File not found',
             });
           }
 
           appLogger.info('Display the document details')
+          timer.stop();
           res.status(200).send(getDocDetails);
         } catch (error) {
           appLogger.error(error)
+          timer.stop();
           return res.status(403).send({
             msg: 'User has no documents / File not found',
           });
@@ -247,6 +271,7 @@ if (!username || !pass) {
       } else {
         // password doesn't match
         appLogger.info('Unauthorized! Invalid credentials')
+        timer.stop();
         return res.status(401).send({
           msg: 'Unauthorized! Invalid credentials',
         });
@@ -254,6 +279,7 @@ if (!username || !pass) {
     } else {
       // user not found
       appLogger.info('User not found')
+      timer.stop();
       return res.status(401).send({
         msg: 'User not found',
       });
@@ -261,18 +287,21 @@ if (!username || !pass) {
   } catch (err) {
     appLogger.error(err)
     console.log(err);
+    timer.stop();
     return res.status(403).send({ msg: err });
   }
 }
 }
 // an async function to delete any document on s3 bucket
 async function deleteDocument(req, res) {
+  const timer = metrics.createTimer('DELETE/v1/document/id API');
   metrics.increment('DELETE/v1/document/id API');
    //extract the authentication code from header
    const authorization = req.headers.authorization;
    //if no auth throw error
    if (!authorization) {
     appLogger.info('Unauthorized, Please use basic auth')
+    timer.stop();
      return res.status(401).send({
        msg: "Unauthorized: Please use basic auth",
      });
@@ -287,6 +316,7 @@ async function deleteDocument(req, res) {
    //if there is no username or password field in auth throw error
    if (!username || !pass) {
     appLogger.info('Unauthorized, Invalid Credentials, one or more fields empty')
+    timer.stop();
      return res.status(401).send({
        msg: "Unauthorized :Invalid Credentials, one or more fields empty",
      });
@@ -317,32 +347,38 @@ async function deleteDocument(req, res) {
                   const deleteDocFromDatabase = await fileAccess.deleteFile(
                     req.params.id
                   );
+                  timer.stop();
                   return res.status(204).send({
                     msg: 'Document deleted',
                   });
                 } else {
                   appLogger.info('Requested Document not found')
+                  timer.stop();
                   return res.status(404).send({
                     msg: 'Requested Document not found',
                   });
                 }
               } catch (err) {
                 appLogger.error(err)
+                timer.stop();
                 return res.status(404).send({ msg: err });
               }
             } else {
               appLogger.info('User has no documents')
+              timer.stop();
               return res.status(404).send({
                 msg: 'User has no documents',
               });
             }
           } catch (error) {
             appLogger.error(err)
+            timer.stop();
             return res.status(404).send(error);
           }
         } else {
           // password doesn't match
           appLogger.info('Unauthorized! Invalid credentials')
+          timer.stop();
           return res.status(401).send({
             msg: 'Unauthorized! Invalid credentials',
           });
@@ -350,12 +386,14 @@ async function deleteDocument(req, res) {
       } else {
         // user not found
         appLogger.info('User not found')
+        timer.stop();
         return res.status(404).send({
           msg: 'User not found',
         });
       }
     } catch (err) {
       appLogger.error(err)
+      timer.stop();
       return res.status(404).send(err);
     }
   }

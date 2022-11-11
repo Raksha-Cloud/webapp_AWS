@@ -14,12 +14,14 @@ var accountController = {
 
 //function to add a new account into the db
 function addAccount(req, res) {
+  const timer = metrics.createTimer('POST/v1/account API');
   metrics.increment('POST/v1/account API');
   let acc = req.body;
   appLogger.info('Checking password length')
   if(acc.password.length<8)
   {
     appLogger.info('Password length is less than 8')
+    timer.stop();
     res.status(400).send({
         msg: "Password length is less than 8"
       });
@@ -35,6 +37,7 @@ function addAccount(req, res) {
     accountAccess
       .create(acc)
       .then((data) => {
+        timer.stop();
         res.status(201).send({
           id: data.id,
           first_name: data.first_name,
@@ -48,6 +51,7 @@ function addAccount(req, res) {
       .catch((error) => {
         appLogger.error(error)
         console.log(error);
+        timer.stop();
         res.status(400).send({
           msg: error.errors[0].message,
         });
@@ -58,11 +62,13 @@ function addAccount(req, res) {
 //function to find an account in db
 function findAccountById(req, res) {
     //extract the authentication code from header
+    const timer = metrics.createTimer('GET/v1/account/id API');
   metrics.increment('GET/v1/account/id API');
   const authorization = req.headers.authorization;
   //if no auth throw error
   appLogger.info('Checking Basic Authentication')
   if (!authorization) {
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized: Please use basic auth",
     });
@@ -76,6 +82,7 @@ function findAccountById(req, res) {
   //if there is no username or password field in auth throw error
   appLogger.info('Checking if there is username and password in basic auth')
   if (!username || !password) {
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized :Invalid Credentials, one or more fields empty",
     });
@@ -96,6 +103,7 @@ function findAccountById(req, res) {
               accountAccess
                 .findById(req.params.id)
                 .then((accountData) => {
+                  timer.stop();
                   res.status(200).send({
                     id: accountData.id,
                     first_name: accountData.first_name,
@@ -108,6 +116,7 @@ function findAccountById(req, res) {
                 .catch((error) => {
                  // console.log(error);
                  appLogger.error('Checking password length')
+                 timer.stop();
                   res.status(400).send({
                     msg: error.errors[0].message,
                   });
@@ -115,6 +124,7 @@ function findAccountById(req, res) {
             } else {
               appLogger.info('Forbidden: Invalid ID in request')
               // when user is trying to access some other account
+              timer.stop();
               res.status(403).send({
                 msg: "Forbidden: Invalid ID in request",
               });
@@ -122,6 +132,7 @@ function findAccountById(req, res) {
           } else {
             // the given password of the user is incorrect
             appLogger.info('Unauthorized, Invalid credentials')
+            timer.stop();
             res.status(401).send({
               msg: "Unauthorized :Invalid credentials",
             });
@@ -131,6 +142,7 @@ function findAccountById(req, res) {
       //if the user does not exist in database
       else {
         appLogger.info('Unauthorized, user does not exist')
+        timer.stop();
         res.status(401).send({
           msg: "Unauthorized :user does not exist",
         });
@@ -139,6 +151,7 @@ function findAccountById(req, res) {
     .catch((error) => {
       //console.log(error);
       appLogger.error(error)
+      timer.stop();
       res.status(400).send({
         msg: error.errors[0].message,
       });
@@ -148,6 +161,7 @@ function findAccountById(req, res) {
 //function to update an account in db
 function updateAccount(req, res) {
   //checking if there is read only fields in request body
+  const timer = metrics.createTimer('PUT/v1/account/id API');
   metrics.increment('PUT/v1/account/id API');
   if (
     req.body.username ||
@@ -156,6 +170,7 @@ function updateAccount(req, res) {
     req.body.id
   ) {
     appLogger.info('Invalid fields requested for updating')
+    timer.stop();
     return res.status(400).send({
       msg: "Invalid fields requested for updating",
     });
@@ -164,6 +179,7 @@ function updateAccount(req, res) {
   const authorization = req.headers.authorization;
   if (!authorization) {
     appLogger.info('Unauthorized, Please use basic auth')
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized: Please use basic auth",
     });
@@ -176,6 +192,7 @@ function updateAccount(req, res) {
   //if username or password is empty
   if (!username || !password) {
     appLogger.info('Unauthorized, Invalid Credentials, one or more fields empt')
+    timer.stop();
     return res.status(401).send({
       msg: "Unauthorized :Invalid Credentials, one or more fields empty",
     });
@@ -199,11 +216,13 @@ function updateAccount(req, res) {
                   accountAccess
                     .updateAccountByID(req.body, req.params.id)
                     .then((data) => {
+                      timer.stop();
                       res.status(204).send();
                     })
                     .catch((error) => {
                       //console.log(error);
                       appLogger.error(error)
+                      timer.stop();
                       res.status(400).send({
                         msg: error.errors[0].message,
                       });
@@ -215,11 +234,13 @@ function updateAccount(req, res) {
               accountAccess
                 .updateAccountByID(req.body, req.params.id)
                 .then((data) => {
+                  timer.stop();
                   res.status(204).send();
                 })
                 .catch((error) => {
                  // console.log(error);
                  appLogger.error(error)
+                 timer.stop();
                   res.status(400).send({
                     msg: error.errors[0].message,
                   });
@@ -227,6 +248,7 @@ function updateAccount(req, res) {
             } else {
               // when user is trying to access some other account
               appLogger.info('Forbidden, Invalid ID in request')
+              timer.stop();
               res.status(403).send({
                 msg: "Forbidden: Invalid ID in request",
               });
@@ -234,6 +256,7 @@ function updateAccount(req, res) {
           } else {
             // the given password of the user is incorrect
             appLogger.info('Unauthorized, Invalid credentials')
+            timer.stop();
             res.status(401).send({
               msg: "Unauthorized :Invalid credentials",
             });
@@ -243,6 +266,7 @@ function updateAccount(req, res) {
       //if the user does not exist in database
       else {
         appLogger.info('Unauthorized, user does not exist')
+        timer.stop();
         res.status(401).send({
           msg: "Unauthorized :user does not exist",
         });
@@ -251,6 +275,7 @@ function updateAccount(req, res) {
     .catch((error) => {
       //console.log(error);
       appLogger.error(error)
+      timer.stop();
       res.status(400).send({
         msg: error.errors[0].message,
       });
