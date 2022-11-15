@@ -209,4 +209,4 @@ $ npm run test
 - started the cloud watch agent on launch
 - installed winston and winston cloud watch to log and push the logs to cloud watch agent
 - installed lynx for statsd metrics to count the number of times an api was called
-- updated API's with logging and metrics 
+- updated API's with logging and metrics  
