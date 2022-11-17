@@ -46,6 +46,7 @@ async function addToken(userName) {
 async function verifyToken(userName, userToken) {
   logger.info(`Getting the username ${userName}`);
   logger.info(`Getting the userToken ${userToken}`);
+  logger.info(process.env.DYNAMO_DB_TABLE_NAME);
   let params = {
     TableName: process.env.DYNAMO_DB_TABLE_NAME,
     Key: {
@@ -56,7 +57,7 @@ async function verifyToken(userName, userToken) {
   };
   logger.info(`params ${params}`);
   logger.info(`params ${JSON.stringify(params)}`);
-  
+
   // waiting for the result, and validating the output result of the system
   const result = await dynamoDb.getItem(params).promise();
   console.log("results"+JSON.stringify(result) )
