@@ -13,6 +13,7 @@ var accountController = {
   addAccount: addAccount,
   findAccountById: findAccountById,
   updateAccount: updateAccount,
+  verifyEmail: verifyEmail,
 };
 
 //function to add a new account into the db
@@ -41,9 +42,9 @@ function addAccount(req, res) {
       .then(async (data) => {
         // timer.stop();
 //-----------------------------------------------------
-        logger.info("adding the username to dynamo db", data.username);
+        appLogger.info("adding the username to dynamo db", data.username);
         const token = dynamoDb.addToken(data.username);
-        logger.info("Sending the messages to the aws sns");
+        appLogger.info("Sending the messages to the aws sns", token);
         const messageParams = {
           first_name: data.first_name,
           last_name: data.last_name,
@@ -121,7 +122,7 @@ function findAccountById(req, res) {
            //--------------------------------------------------------
         // Check if the user is verified
         if (!accountData.verified) {
-          logger.info('User ' + username + ' is not verified');
+          appLogger.info('User ' + username + ' is not verified');
           return res.status(403).json({
             message: 'Forbidden: User is not verified',
           });
@@ -241,7 +242,7 @@ function updateAccount(req, res) {
         //===============================================================================
                 // Check if the user is verified
                 if (!accountData.verified) {
-                  logger.info('User ' + username + ' is not verified');
+                  appLogger.info('User ' + username + ' is not verified');
                   return res.status(403).json({
                     message: 'Forbidden: User is not verified',
                   });
@@ -329,5 +330,40 @@ function updateAccount(req, res) {
       });
     });
 }
+
+async function verifyEmail(req, res) {
+  appLogger.info('Getting the token and email from the auth');
+  let email = req.query.email;
+  appLogger.info(`The email is ${email}`);
+  let token = req.query.token;
+  appLogger.info(`The token is ${token}`);
+  appLogger.info('Verify email and token in dynamo Db');
+  const validEmail = await dynamoDb.verifyToken(email, token);
+  if (validEmail) {
+    appLogger.info('Email and token are valid');
+    appLogger.info('Updating the data in the Postgres database');
+    appLogger.info('Getting the username using the email');
+    const user = await accountAccess.accountDetails(email);
+    appLogger.info('Updating the status to true');
+    user.verified = true;
+    user.verified_on = new Date();
+    // user.account_updated = new Date();
+    appLogger.info('Saving the user data');
+    try {
+      await user.save();
+    } catch (err) {
+      appLogger.error(err);
+      res.status(500).json({
+        message: 'Internal Server Error',
+      });
+    }
+  } else {
+    appLogger.info('Email and token are not valid');
+    res.status(401).json({
+      message: 'Unauthorized: Email and token are not valid',
+    });
+  }
+}
+
 
 module.exports = accountController;
