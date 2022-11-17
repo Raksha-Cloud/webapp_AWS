@@ -351,6 +351,9 @@ async function verifyEmail(req, res) {
     appLogger.info('Saving the user data');
     try {
       await user.save();
+      res.status.send(201).json({
+        message: 'Verified your email successfully',
+      });
     } catch (err) {
       appLogger.error(err);
       res.status(500).json({
