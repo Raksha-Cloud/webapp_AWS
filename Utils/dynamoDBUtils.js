@@ -5,21 +5,22 @@ const logger = require('../config/logger-config.js');
 require('dotenv').config();
 
 
-// exporting the required function
+// setting up the dynamo db functions
 const dynamoDbProvider = {
   addToken: addToken,
   verifyToken: verifyToken,
 };
-// configuring the aws dynamoDB
+// setting up the dynamo db configurations
 const dynamoDb = new AWS.DynamoDB({
-  region: process.env.AWS_REGION || 'us-east-1',
+  region: process.env.AWS_REGION,
 });
-// functions to verify the tokens
+// creating a function to add tokens for the email address created in dynamo db
 async function addToken(userName) {
   const token = uuid.v4();
   logger.info('generated username', token);
-  // configuring the params
+  // setting up the token expiry time
   let epochTime = new Date().getTime() / 1000 + 300;
+  //defining the columns of dynamo db table
   let params = {
     TableName: process.env.DYNAMO_DB_TABLE_NAME,
     Item: {
@@ -34,16 +35,15 @@ async function addToken(userName) {
       },
     },
   };
-  // waiting for the result
   await dynamoDb.putItem(params).promise();
   logger.info('generated the user tokens', token);
   return token;
 }
-// functions to handle the tokens
+// creating a function to verify the email token
 async function verifyToken(userName, userToken) {
-  logger.info(`Getting the username ${userName}`);
-  logger.info(`Getting the userToken ${userToken}`);
-  logger.info(process.env.DYNAMO_DB_TABLE_NAME);
+  logger.info(`the username ${userName}`);
+  logger.info(`the userToken ${userToken}`);
+
   let params = {
     TableName: process.env.DYNAMO_DB_TABLE_NAME,
     Key: {
@@ -52,30 +52,26 @@ async function verifyToken(userName, userToken) {
       },
     },
   };
-  logger.info(`params ${params}`);
-  logger.info(`params ${JSON.stringify(params)}`);
-
-  // waiting for the result, and validating the output result of the system
-  const result = await dynamoDb.getItem(params).promise();
-  console.log("results"+JSON.stringify(result) )
-  logger.info(`Got the result ${JSON.stringify(result)}`);
-  logger.info(`result item ${JSON.stringify(result.Item)}`);
-  logger.info(`results iitem ${result.Item}`);
-  logger.info(`params ${result.Item.usertoken}`);
-  logger.info(`params ${result.Item.tokenttl}`);
-  if (result.Item && result.Item.usertoken && result.Item.tokenttl) {
+  // comparing the result from params and dynamo db
+  const dbData = await dynamoDb.getItem(params).promise();
+ 
+  logger.info(`Got the dbData ${JSON.stringify(dbData)}`);
+  logger.info(`dbData item ${JSON.stringify(dbData.Item)}`);
+ 
+  if (dbData.Item && dbData.Item.usertoken && dbData.Item.tokenttl) {
     // validating the truth
-    logger.info('validating the items');
-    let userTokenDB = result.Item.usertoken.S;
-    let tokenTTL = result.Item.tokenttl.N;
+    logger.info('checking the data items');
+    let userTokenDB = dbData.Item.usertoken.S;
+    let tokenTTL = dbData.Item.tokenttl.N;
     let currentTime = new Date().getTime() / 1000;
+    //to check if the token is expired
     if (userTokenDB === userToken && currentTime < tokenTTL) {
       logger.info('user is verified');
       return true;
     }
   }
-  logger.info('user has not verified yet');
+  logger.info('Token expired user not verified');
   return false;
 }
-// export the provider
+
 module.exports = dynamoDbProvider;

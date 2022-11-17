@@ -5,8 +5,8 @@ const lynx = require("lynx");
 const metrics = new lynx("localhost", 8125);
 const appLogger = require("../config/logger-config.js");
 require("dotenv").config();
-const dynamoDb = require("../Providers/dynamoDBProvider.js");
-const sns = require("../Providers/snsProvider.js");
+const dynamoDb = require("../Utils/dynamoDBUtils.js");
+const sns = require("../Utils/snsUtils.js");
 
 //define all the methods
 var accountController = {
@@ -333,48 +333,44 @@ function updateAccount(req, res) {
 
 async function verifyEmail(req, res) {
   //function verifyEmail(req, res) {
-  appLogger.info("Getting the token and email from the auth");
+  appLogger.info("Getting the token and email from the request");
   let email = req.query.email;
-  appLogger.info(`The email is ${email}`);
   let token = req.query.token;
+  appLogger.info(`The email is ${email}`);
   appLogger.info(`The token is ${token}`);
-  appLogger.info("Verify email and token in dynamo Db");
+  appLogger.info("Verify if the email and token is in the dynamo DB");
   const validEmail = await dynamoDb.verifyToken(email, token);
-  appLogger.info(`The token is ${validEmail}`);
+  appLogger.info(`The status of email verification is ${validEmail}`);
   //const validEmail =  dynamoDb.verifyToken(email, token);
   if (validEmail) {
-    appLogger.info("Email and token are valid");
-    appLogger.info("Updating the data in the Postgres database");
-    appLogger.info("Getting the username using the email");
+    appLogger.info("User successfully verified the email");
     // const user = await accountAccess.accountDetails(email);
     // upon successful authentication check if user exist in db
     accountAccess
       .accountDetails(email)
       .then(async (user) => {
-        //if user exist in db check if password is correct
-
         if (user) {
           //const user =  accountAccess.accountDetails(email);
-          appLogger.info("Updating the status to true");
+          appLogger.info("Updating the verification status in RDS instance");
           user.verified = true;
           user.verified_on = new Date();
           // user.account_updated = new Date();
           appLogger.info(
-            `Got the user details,${user.verified_on}`
+            `Fetching the user details,${user.verified_on}`
           );
           appLogger.info(
-            `Got the user details,${user.verified}`
+            `Fetching the user details,${user.verified}`
           );
           try {
             await user.save();
             //user.save();
             res.status(201).json({
-              message: "Verified your email successfully",
+              msg: "Verified your email successfully",
             });
           } catch (err) {
             appLogger.error(err);
             res.status(500).json({
-              message: "Internal Server Error",
+              msg: "Internal Server Error",
             });
           }
         }
@@ -396,9 +392,9 @@ async function verifyEmail(req, res) {
         });
       });
   } else {
-    appLogger.info("Email and token are not valid");
+    appLogger.info("Verification email token expired!");
     res.status(401).json({
-      message: "Unauthorized: Email and token are not valid",
+      message: "Verification email token expired!",
     });
   }
 }
