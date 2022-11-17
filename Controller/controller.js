@@ -5,8 +5,8 @@ const lynx = require("lynx");
 const metrics = new lynx("localhost", 8125);
 const appLogger = require("../config/logger-config.js");
 require("dotenv").config();
-const dynamoDb = require("../providers/dynamoDbProvider");
-const sns = require("../providers/snsProvider");
+const dynamoDb = require("../Providers/dynamoDBProvider.js");
+const sns = require("../Providers/snsProvider.js");
 
 //define all the methods
 var accountController = {
