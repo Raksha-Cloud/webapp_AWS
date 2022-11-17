@@ -60,6 +60,15 @@ async function uploadDoc(req, res) {
       const result = await accountAccess.accountDetails(username);
       //console.log(result);
       if (result) {
+       // ====================================================================================
+        // Check if the user is verified
+        if (!result.verified) {
+          appLogger.info('User ' + username + ' is not verified');
+          return res.status(403).json({
+            message: 'Forbidden: User is not verified',
+          });
+        }
+        //===============================================================================
         // check if the passwords are matching
         const isMatch = bcrypt.compareSync(pass, result.password);
         // check if the passwords are matching
@@ -146,6 +155,15 @@ async function getDocument(req, res) {
   try {
     const result = await accountAccess.accountDetails(username);
     if (result) {
+          // ====================================================================================
+        // Check if the user is verified
+        if (!result.verified) {
+          appLogger.info('User ' + username + ' is not verified');
+          return res.status(403).json({
+            message: 'Forbidden: User is not verified',
+          });
+        }
+        //===============================================================================
       // check if the passwords are matching
       const isMatch = bcrypt.compareSync(pass, result.password);
       // check if the passwords are matching
@@ -242,6 +260,15 @@ if (!username || !pass) {
   try {
     const result = await accountAccess.accountDetails(username);
     if (result) {
+          // ====================================================================================
+        // Check if the user is verified
+        if (!result.verified) {
+          appLogger.info('User ' + username + ' is not verified');
+          return res.status(403).json({
+            message: 'Forbidden: User is not verified',
+          });
+        }
+        //===============================================================================
       // check if the passwords are matching
       const isMatch = bcrypt.compareSync(pass, result.password);
       // check if the passwords are matching
@@ -325,6 +352,15 @@ async function deleteDocument(req, res) {
     try {
       const result = await accountAccess.accountDetails(username);
       if (result) {
+        // ====================================================================================
+        // Check if the user is verified
+        if (!result.verified) {
+          appLogger.info('User ' + username + ' is not verified');
+          return res.status(403).json({
+            message: 'Forbidden: User is not verified',
+          });
+        }
+        //===============================================================================
         // check if the passwords are matching
         const isMatch = bcrypt.compareSync(pass, result.password);
         // check if the passwords are matching

@@ -1,9 +1,12 @@
 const accountAccess = require("../Middleware/dataAccessObjects.js");
 const bcrypt = require("bcrypt");
 const basicAuth = require("express-basic-auth");
-const lynx = require('lynx');
-const metrics = new lynx('localhost', 8125);
-const appLogger = require('../config/logger-config.js');
+const lynx = require("lynx");
+const metrics = new lynx("localhost", 8125);
+const appLogger = require("../config/logger-config.js");
+require("dotenv").config();
+const dynamoDb = require("../providers/dynamoDbProvider");
+const sns = require("../providers/snsProvider");
 
 //define all the methods
 var accountController = {
@@ -14,30 +17,48 @@ var accountController = {
 
 //function to add a new account into the db
 function addAccount(req, res) {
-  const timer = metrics.createTimer('POST/v1/account API');
-  metrics.increment('POST/v1/account API');
+  //const timer = metrics.createTimer('POST/v1/account API');
+  metrics.increment("POST/v1/account API");
   let acc = req.body;
-  appLogger.info('Checking password length')
-  if(acc.password.length<8)
-  {
-    appLogger.info('Password length is less than 8')
-    timer.stop();
+  appLogger.info("Checking password length");
+  if (acc.password.length < 8) {
+    appLogger.info("Password length is less than 8");
+    // timer.stop();
     res.status(400).send({
-        msg: "Password length is less than 8"
-      });
+      msg: "Password length is less than 8",
+    });
   }
 
-  appLogger.info('Hashing the password')
+  appLogger.info("Hashing the password");
   //hashing the password
   bcrypt.hash(acc.password, 10).then(function (hash) {
     // Store hash in your password DB.
     acc.password = hash;
     //if all the schema checks pass the record is added to db and response is shared without password field
-    appLogger.info('Account added to db and response is shared')
+    appLogger.info("Account added to db and response is shared");
     accountAccess
       .create(acc)
-      .then((data) => {
-        timer.stop();
+      .then(async (data) => {
+        // timer.stop();
+//-----------------------------------------------------
+        logger.info("adding the username to dynamo db", data.username);
+        const token = dynamoDb.addToken(data.username);
+        logger.info("Sending the messages to the aws sns");
+        const messageParams = {
+          first_name: data.first_name,
+          last_name: data.last_name,
+          username: data.username,
+          userToken: token,
+          message_type: "verify_user",
+        };
+        try{
+          await sns.publishMessage(JSON.stringify(messageParams));
+          appLogger.info("Published sns trigger")
+        }catch(error){
+          appLogger.error(error)
+          console.log(error)
+        }
+     //========================================================================================
         res.status(201).send({
           id: data.id,
           first_name: data.first_name,
@@ -49,9 +70,9 @@ function addAccount(req, res) {
       })
       //if any of the validation check fails error is displayed
       .catch((error) => {
-        appLogger.error(error)
+        appLogger.error(error);
         console.log(error);
-        timer.stop();
+        //timer.stop();
         res.status(400).send({
           msg: error.errors[0].message,
         });
@@ -61,12 +82,12 @@ function addAccount(req, res) {
 
 //function to find an account in db
 function findAccountById(req, res) {
-    //extract the authentication code from header
-    const timer = metrics.createTimer('GET/v1/account/id API');
-  metrics.increment('GET/v1/account/id API');
+  //extract the authentication code from header
+  const timer = metrics.createTimer("GET/v1/account/id API");
+  metrics.increment("GET/v1/account/id API");
   const authorization = req.headers.authorization;
   //if no auth throw error
-  appLogger.info('Checking Basic Authentication')
+  appLogger.info("Checking Basic Authentication");
   if (!authorization) {
     timer.stop();
     return res.status(401).send({
@@ -80,7 +101,7 @@ function findAccountById(req, res) {
   //split based on : to get email and password
   const [username, password] = decoded.split(":");
   //if there is no username or password field in auth throw error
-  appLogger.info('Checking if there is username and password in basic auth')
+  appLogger.info("Checking if there is username and password in basic auth");
   if (!username || !password) {
     timer.stop();
     return res.status(401).send({
@@ -91,15 +112,28 @@ function findAccountById(req, res) {
   accountAccess
     .accountDetails(username)
     .then((accountData) => {
-        //if user exist in db check if password is correct
-        appLogger.info('Checking password match with the basic auth user and user found in db')
+      //if user exist in db check if password is correct
+      appLogger.info(
+        "Checking password match with the basic auth user and user found in db"
+      );
+   
       if (accountData) {
+           //--------------------------------------------------------
+        // Check if the user is verified
+        if (!accountData.verified) {
+          logger.info('User ' + username + ' is not verified');
+          return res.status(403).json({
+            message: 'Forbidden: User is not verified',
+          });
+        }
+        //===========================================================
+        
         bcrypt.compare(password, accountData.password).then(function (result) {
           //if the ppassword is correct then check for request id and user id
           if (result) {
-            appLogger.info('Checking if req ID and user id in DB is same')
+            appLogger.info("Checking if req ID and user id in DB is same");
             if (Number(req.params.id) === accountData.id) {
-                //if id is same fetch the record from db without password field
+              //if id is same fetch the record from db without password field
               accountAccess
                 .findById(req.params.id)
                 .then((accountData) => {
@@ -114,15 +148,15 @@ function findAccountById(req, res) {
                   });
                 })
                 .catch((error) => {
-                 // console.log(error);
-                 appLogger.error('Checking password length')
-                 timer.stop();
+                  // console.log(error);
+                  appLogger.error("Checking password length");
+                  timer.stop();
                   res.status(400).send({
                     msg: error.errors[0].message,
                   });
                 });
             } else {
-              appLogger.info('Forbidden: Invalid ID in request')
+              appLogger.info("Forbidden: Invalid ID in request");
               // when user is trying to access some other account
               timer.stop();
               res.status(403).send({
@@ -131,7 +165,7 @@ function findAccountById(req, res) {
             }
           } else {
             // the given password of the user is incorrect
-            appLogger.info('Unauthorized, Invalid credentials')
+            appLogger.info("Unauthorized, Invalid credentials");
             timer.stop();
             res.status(401).send({
               msg: "Unauthorized :Invalid credentials",
@@ -141,7 +175,7 @@ function findAccountById(req, res) {
       }
       //if the user does not exist in database
       else {
-        appLogger.info('Unauthorized, user does not exist')
+        appLogger.info("Unauthorized, user does not exist");
         timer.stop();
         res.status(401).send({
           msg: "Unauthorized :user does not exist",
@@ -150,7 +184,7 @@ function findAccountById(req, res) {
     })
     .catch((error) => {
       //console.log(error);
-      appLogger.error(error)
+      appLogger.error(error);
       timer.stop();
       res.status(400).send({
         msg: error.errors[0].message,
@@ -161,15 +195,15 @@ function findAccountById(req, res) {
 //function to update an account in db
 function updateAccount(req, res) {
   //checking if there is read only fields in request body
-  const timer = metrics.createTimer('PUT/v1/account/id API');
-  metrics.increment('PUT/v1/account/id API');
+  const timer = metrics.createTimer("PUT/v1/account/id API");
+  metrics.increment("PUT/v1/account/id API");
   if (
     req.body.username ||
     req.body.created_at ||
     req.body.updated_at ||
     req.body.id
   ) {
-    appLogger.info('Invalid fields requested for updating')
+    appLogger.info("Invalid fields requested for updating");
     timer.stop();
     return res.status(400).send({
       msg: "Invalid fields requested for updating",
@@ -178,7 +212,7 @@ function updateAccount(req, res) {
   //extracting the auth code and decoding it to get username and password
   const authorization = req.headers.authorization;
   if (!authorization) {
-    appLogger.info('Unauthorized, Please use basic auth')
+    appLogger.info("Unauthorized, Please use basic auth");
     timer.stop();
     return res.status(401).send({
       msg: "Unauthorized: Please use basic auth",
@@ -191,7 +225,9 @@ function updateAccount(req, res) {
   const [username, password] = decoded.split(":");
   //if username or password is empty
   if (!username || !password) {
-    appLogger.info('Unauthorized, Invalid Credentials, one or more fields empt')
+    appLogger.info(
+      "Unauthorized, Invalid Credentials, one or more fields empt"
+    );
     timer.stop();
     return res.status(401).send({
       msg: "Unauthorized :Invalid Credentials, one or more fields empty",
@@ -202,9 +238,19 @@ function updateAccount(req, res) {
     .accountDetails(username)
     .then((accountData) => {
       if (accountData) {
+        //===============================================================================
+                // Check if the user is verified
+                if (!accountData.verified) {
+                  logger.info('User ' + username + ' is not verified');
+                  return res.status(403).json({
+                    message: 'Forbidden: User is not verified',
+                  });
+                }
+
+        //==================================================================================
         //if the user exist in db then check if the password in auth and db match
         bcrypt.compare(password, accountData.password).then(function (result) {
-            //if both the password match then check if the request id and user id is same
+          //if both the password match then check if the request id and user id is same
           if (result) {
             if (Number(req.params.id) === accountData.id) {
               //if there is a password field in request, hash the password and update the record
@@ -212,7 +258,9 @@ function updateAccount(req, res) {
                 bcrypt.hash(req.body.password, 10).then(function (hash) {
                   // Store hash in your password DB.
                   req.body.password = hash;
-                  appLogger.info('Hashed the password and updated the record in DB')
+                  appLogger.info(
+                    "Hashed the password and updated the record in DB"
+                  );
                   accountAccess
                     .updateAccountByID(req.body, req.params.id)
                     .then((data) => {
@@ -221,7 +269,7 @@ function updateAccount(req, res) {
                     })
                     .catch((error) => {
                       //console.log(error);
-                      appLogger.error(error)
+                      appLogger.error(error);
                       timer.stop();
                       res.status(400).send({
                         msg: error.errors[0].message,
@@ -230,7 +278,7 @@ function updateAccount(req, res) {
                 });
               }
               //if no password field just update the records in db
-              appLogger.info('updating the record in DB')
+              appLogger.info("updating the record in DB");
               accountAccess
                 .updateAccountByID(req.body, req.params.id)
                 .then((data) => {
@@ -238,16 +286,16 @@ function updateAccount(req, res) {
                   res.status(204).send();
                 })
                 .catch((error) => {
-                 // console.log(error);
-                 appLogger.error(error)
-                 timer.stop();
+                  // console.log(error);
+                  appLogger.error(error);
+                  timer.stop();
                   res.status(400).send({
                     msg: error.errors[0].message,
                   });
                 });
             } else {
               // when user is trying to access some other account
-              appLogger.info('Forbidden, Invalid ID in request')
+              appLogger.info("Forbidden, Invalid ID in request");
               timer.stop();
               res.status(403).send({
                 msg: "Forbidden: Invalid ID in request",
@@ -255,7 +303,7 @@ function updateAccount(req, res) {
             }
           } else {
             // the given password of the user is incorrect
-            appLogger.info('Unauthorized, Invalid credentials')
+            appLogger.info("Unauthorized, Invalid credentials");
             timer.stop();
             res.status(401).send({
               msg: "Unauthorized :Invalid credentials",
@@ -265,7 +313,7 @@ function updateAccount(req, res) {
       }
       //if the user does not exist in database
       else {
-        appLogger.info('Unauthorized, user does not exist')
+        appLogger.info("Unauthorized, user does not exist");
         timer.stop();
         res.status(401).send({
           msg: "Unauthorized :user does not exist",
@@ -274,7 +322,7 @@ function updateAccount(req, res) {
     })
     .catch((error) => {
       //console.log(error);
-      appLogger.error(error)
+      appLogger.error(error);
       timer.stop();
       res.status(400).send({
         msg: error.errors[0].message,
