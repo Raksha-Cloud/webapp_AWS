@@ -352,7 +352,7 @@ async function verifyEmail(req, res) {
       .then(async (user) => {
         //if user exist in db check if password is correct
 
-        if (accountData) {
+        if (user) {
           //const user =  accountAccess.accountDetails(email);
           appLogger.info("Updating the status to true");
           user.verified = true;
