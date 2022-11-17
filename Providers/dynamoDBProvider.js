@@ -3,11 +3,8 @@ const uuid = require('uuid');
 const logger = require('../config/logger-config.js');
 //setup the .env file
 require('dotenv').config();
-const AWS = require('aws-sdk');
-const uuid = require('uuid');
-const logger = require('../config/winston');
-//setup the .env file
-require('dotenv').config();
+
+
 // exporting the required function
 const dynamoDbProvider = {
   addToken: addToken,
