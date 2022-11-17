@@ -368,7 +368,7 @@ async function verifyEmail(req, res) {
           try {
             await user.save();
             //user.save();
-            res.status.send(201).json({
+            res.status(201).json({
               message: "Verified your email successfully",
             });
           } catch (err) {
