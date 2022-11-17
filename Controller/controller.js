@@ -340,6 +340,7 @@ async function verifyEmail(req, res) {
   appLogger.info(`The token is ${token}`);
   appLogger.info("Verify email and token in dynamo Db");
   const validEmail = await dynamoDb.verifyToken(email, token);
+  appLogger.info(`The token is ${validEmail}`);
   //const validEmail =  dynamoDb.verifyToken(email, token);
   if (validEmail) {
     appLogger.info("Email and token are valid");
@@ -359,7 +360,10 @@ async function verifyEmail(req, res) {
           user.verified_on = new Date();
           // user.account_updated = new Date();
           appLogger.info(
-            `Got the user details,${JSON.Stringify(user, null, 4)}`
+            `Got the user details,${user.verified_on}`
+          );
+          appLogger.info(
+            `Got the user details,${user.verified}`
           );
           try {
             await user.save();

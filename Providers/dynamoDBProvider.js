@@ -19,7 +19,7 @@ async function addToken(userName) {
   const token = uuid.v4();
   logger.info('generated username', token);
   // configuring the params
-  let epochTime = new Date().getTime() / 1000 + 120;
+  let epochTime = new Date().getTime() / 1000 + 300;
   let params = {
     TableName: process.env.DYNAMO_DB_TABLE_NAME,
     Item: {
