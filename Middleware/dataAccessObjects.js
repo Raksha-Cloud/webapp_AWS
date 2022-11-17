@@ -5,7 +5,8 @@ var accountAccess = {
     create: create,
     accountDetails:accountDetails,
      findById: findById,
-     updateAccountByID: updateAccountByID
+     updateAccountByID: updateAccountByID,
+     accountDetailsSave:accountDetailsSave
 }
 
 //method to fetch a record with a user name using built in sequilize function
@@ -31,4 +32,6 @@ function updateAccountByID(account, id) {
     };
     return User.update(updateAccount, { where: { id: id } });
 }
+
+
 module.exports = accountAccess;
