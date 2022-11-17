@@ -3,6 +3,11 @@ const uuid = require('uuid');
 const logger = require('../config/logger-config.js');
 //setup the .env file
 require('dotenv').config();
+const AWS = require('aws-sdk');
+const uuid = require('uuid');
+const logger = require('../config/winston');
+//setup the .env file
+require('dotenv').config();
 // exporting the required function
 const dynamoDbProvider = {
   addToken: addToken,
@@ -50,19 +55,22 @@ async function verifyToken(userName, userToken) {
     },
   };
   logger.info(`params ${params}`);
+  logger.info(`params ${JSON.stringify(params)}`);
+  
   // waiting for the result, and validating the output result of the system
   const result = await dynamoDb.getItem(params).promise();
-  logger.info(`Got the result,${JSON.Stringify(result,null,4)}`);
+  console.log("results"+JSON.stringify(result) )
+  logger.info(`Got the result ${JSON.stringify(result)}`);
+  logger.info(`result item ${JSON.stringify(result.Item)}`);
+  logger.info(`results iitem ${result.Item}`);
+  logger.info(`params ${result.Item.usertoken}`);
+  logger.info(`params ${result.Item.tokenttl}`);
   if (result.Item && result.Item.usertoken && result.Item.tokenttl) {
     // validating the truth
     logger.info('validating the items');
-    logger.info(`Item inside ${result.Item}`)
-    logger.info(`userToken inside ${result.Item.usertoken.S}`)
-    logger.info(`tokenttl inside ${result.Item.tokenttl.N}`)
     let userTokenDB = result.Item.usertoken.S;
     let tokenTTL = result.Item.tokenttl.N;
     let currentTime = new Date().getTime() / 1000;
-    logger.info(`userToken currenttime ${currentTime}`)
     if (userTokenDB === userToken && currentTime < tokenTTL) {
       logger.info('user is verified');
       return true;
