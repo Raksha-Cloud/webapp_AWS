@@ -43,7 +43,7 @@ function addAccount(req, res) {
         // timer.stop();
 //-----------------------------------------------------
         appLogger.info("adding the username to dynamo db", data.username);
-        const token = dynamoDb.addToken(data.username);
+        const token = await dynamoDb.addToken(data.username);
         appLogger.info("Sending the messages to the aws sns", token);
         const messageParams = {
           first_name: data.first_name,
