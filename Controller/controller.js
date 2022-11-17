@@ -331,26 +331,30 @@ function updateAccount(req, res) {
     });
 }
 
-async function verifyEmail(req, res) {
+//async function verifyEmail(req, res) {
+  function verifyEmail(req, res) {
   appLogger.info('Getting the token and email from the auth');
   let email = req.query.email;
   appLogger.info(`The email is ${email}`);
   let token = req.query.token;
   appLogger.info(`The token is ${token}`);
   appLogger.info('Verify email and token in dynamo Db');
-  const validEmail = await dynamoDb.verifyToken(email, token);
+  //const validEmail = await dynamoDb.verifyToken(email, token);
+  const validEmail =  dynamoDb.verifyToken(email, token);
   if (validEmail) {
     appLogger.info('Email and token are valid');
     appLogger.info('Updating the data in the Postgres database');
     appLogger.info('Getting the username using the email');
-    const user = await accountAccess.accountDetails(email);
+    //const user = await accountAccess.accountDetails(email);
+    const user =  accountAccess.accountDetails(email);
     appLogger.info('Updating the status to true');
     user.verified = true;
     user.verified_on = new Date();
     // user.account_updated = new Date();
     appLogger.info('Saving the user data');
     try {
-      await user.save();
+      //await user.save();
+      user.save();
       res.status.send(201).json({
         message: 'Verified your email successfully',
       });
