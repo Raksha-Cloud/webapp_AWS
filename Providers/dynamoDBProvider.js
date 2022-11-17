@@ -16,7 +16,7 @@ const dynamoDb = new AWS.DynamoDB({
 async function addToken(userName) {
   const token = uuid.v4();
   // configuring the params
-  let epochTime = new Date().getTime() / 1000 + 300;
+  let epochTime = new Date().getTime() / 1000 + 120;
   let params = {
     TableName: process.env.DYNAMO_DB_TABLE_NAME,
     Item: {

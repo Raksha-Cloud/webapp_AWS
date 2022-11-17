@@ -8,6 +8,9 @@ const upload = multer({ dest: __dirname + '/uploads/' });
 router.post('/v1/account', accountController.addAccount);
 router.get('/v1/account/:id', accountController.findAccountById);
 router.put('/v1/account/:id', accountController.updateAccount);
+router.put('/v1/account/verifyUser', accountController.verifyEmail);
+
+
 //routes for document endpoints
 router.post('/v1/document', upload.single('file'), fileController.uploadDoc);
 router.get('/v1/document', fileController.getAllDoc);
