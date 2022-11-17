@@ -5,8 +5,8 @@ var accountAccess = {
     create: create,
     accountDetails:accountDetails,
      findById: findById,
-     updateAccountByID: updateAccountByID,
-     accountDetailsSave:accountDetailsSave
+     updateAccountByID: updateAccountByID
+     
 }
 
 //method to fetch a record with a user name using built in sequilize function
