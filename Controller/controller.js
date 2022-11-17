@@ -41,7 +41,7 @@ function addAccount(req, res) {
       .create(acc)
       .then(async (data) => {
         // timer.stop();
-//-----------------------------------------------------
+        //-----------------------------------------------------
         appLogger.info("adding the username to dynamo db", data.username);
         const token = await dynamoDb.addToken(data.username);
         appLogger.info("Sending the messages to the aws sns", token);
@@ -52,14 +52,14 @@ function addAccount(req, res) {
           userToken: token,
           message_type: "verify_user",
         };
-        try{
+        try {
           await sns.publishMessage(JSON.stringify(messageParams));
-          appLogger.info("Published sns trigger")
-        }catch(error){
-          appLogger.error(error)
-          console.log(error)
+          appLogger.info("Published sns trigger");
+        } catch (error) {
+          appLogger.error(error);
+          console.log(error);
         }
-     //========================================================================================
+        //========================================================================================
         res.status(201).send({
           id: data.id,
           first_name: data.first_name,
@@ -117,18 +117,18 @@ function findAccountById(req, res) {
       appLogger.info(
         "Checking password match with the basic auth user and user found in db"
       );
-   
+
       if (accountData) {
-           //--------------------------------------------------------
+        //--------------------------------------------------------
         // Check if the user is verified
         if (!accountData.verified) {
-          appLogger.info('User ' + username + ' is not verified');
+          appLogger.info("User " + username + " is not verified");
           return res.status(403).json({
-            message: 'Forbidden: User is not verified',
+            message: "Forbidden: User is not verified",
           });
         }
         //===========================================================
-        
+
         bcrypt.compare(password, accountData.password).then(function (result) {
           //if the ppassword is correct then check for request id and user id
           if (result) {
@@ -240,13 +240,13 @@ function updateAccount(req, res) {
     .then((accountData) => {
       if (accountData) {
         //===============================================================================
-                // Check if the user is verified
-                if (!accountData.verified) {
-                  appLogger.info('User ' + username + ' is not verified');
-                  return res.status(403).json({
-                    message: 'Forbidden: User is not verified',
-                  });
-                }
+        // Check if the user is verified
+        if (!accountData.verified) {
+          appLogger.info("User " + username + " is not verified");
+          return res.status(403).json({
+            message: "Forbidden: User is not verified",
+          });
+        }
 
         //==================================================================================
         //if the user exist in db then check if the password in auth and db match
@@ -333,45 +333,70 @@ function updateAccount(req, res) {
 
 async function verifyEmail(req, res) {
   //function verifyEmail(req, res) {
-  appLogger.info('Getting the token and email from the auth');
+  appLogger.info("Getting the token and email from the auth");
   let email = req.query.email;
   appLogger.info(`The email is ${email}`);
   let token = req.query.token;
   appLogger.info(`The token is ${token}`);
-  appLogger.info('Verify email and token in dynamo Db');
+  appLogger.info("Verify email and token in dynamo Db");
   const validEmail = await dynamoDb.verifyToken(email, token);
   //const validEmail =  dynamoDb.verifyToken(email, token);
   if (validEmail) {
-    appLogger.info('Email and token are valid');
-    appLogger.info('Updating the data in the Postgres database');
-    appLogger.info('Getting the username using the email');
-    const user = await accountAccess.accountDetails(email);
-    //const user =  accountAccess.accountDetails(email);
-    appLogger.info('Updating the status to true');
-    user.verified = true;
-    user.verified_on = new Date();
-    // user.account_updated = new Date();
-    appLogger.info(`Got the user details,${JSON.Stringify(user,null,4)}`)
-    try {
-     
-      await user.save();
-      //user.save();
-      res.status.send(201).json({
-        message: 'Verified your email successfully',
+    appLogger.info("Email and token are valid");
+    appLogger.info("Updating the data in the Postgres database");
+    appLogger.info("Getting the username using the email");
+    // const user = await accountAccess.accountDetails(email);
+    // upon successful authentication check if user exist in db
+    accountAccess
+      .accountDetails(email)
+      .then(async (user) => {
+        //if user exist in db check if password is correct
+
+        if (accountData) {
+          //const user =  accountAccess.accountDetails(email);
+          appLogger.info("Updating the status to true");
+          user.verified = true;
+          user.verified_on = new Date();
+          // user.account_updated = new Date();
+          appLogger.info(
+            `Got the user details,${JSON.Stringify(user, null, 4)}`
+          );
+          try {
+            await user.save();
+            //user.save();
+            res.status.send(201).json({
+              message: "Verified your email successfully",
+            });
+          } catch (err) {
+            appLogger.error(err);
+            res.status(500).json({
+              message: "Internal Server Error",
+            });
+          }
+        }
+        //if the user does not exist in database
+        else {
+          appLogger.info("Unauthorized, user does not exist");
+          timer.stop();
+          res.status(401).send({
+            msg: "Unauthorized :user does not exist",
+          });
+        }
+      })
+      .catch((error) => {
+        //console.log(error);
+        appLogger.error(error);
+        timer.stop();
+        res.status(400).send({
+          msg: error.errors[0].message,
+        });
       });
-    } catch (err) {
-      appLogger.error(err);
-      res.status(500).json({
-        message: 'Internal Server Error',
-      });
-    }
   } else {
-    appLogger.info('Email and token are not valid');
+    appLogger.info("Email and token are not valid");
     res.status(401).json({
-      message: 'Unauthorized: Email and token are not valid',
+      message: "Unauthorized: Email and token are not valid",
     });
   }
 }
-
 
 module.exports = accountController;
