@@ -16,7 +16,7 @@ describe('Server health check', () => {
 //test valid password
 describe('To test valid password in the Post request ', () => {
     it('POST /account', async () => {
-      const response = await request(server).post('/v2/account').send({
+      const response = await request(server).post('/v1/account').send({
         first_name: 'Raksha',
         last_name: 'Kagadalu',
         username: 'raksha.kagadalu@gmail.com',
@@ -29,7 +29,7 @@ describe('To test valid password in the Post request ', () => {
   //test valid emailID
 describe('To test valid username in the Post request ', () => {
     it('POST /account', async () => {
-      const response = await request(server).post('/v2/account').send({
+      const response = await request(server).post('/v1/account').send({
         first_name: 'Raksha',
         last_name: 'Kagadalu',
         username: 'rakshakagadalu@gmailcom',
