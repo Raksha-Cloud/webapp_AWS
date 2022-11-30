@@ -210,3 +210,9 @@ $ npm run test
 - installed winston and winston cloud watch to log and push the logs to cloud watch agent
 - installed lynx for statsd metrics to count the number of times an api was called
 - updated API's with logging and metrics   
+
+##### ACM CLI command to import SSL certificate
+    ```
+    $ aws acm import-certificate --certificate fileb://demo.rakshakagadaluraju.me/certificate.pem --certificate-chain fileb://demo.rakshakagadaluraju.me/ca_bundle.pem --private-key fileb://demo.rakshakagadaluraju.me/private.pem
+
+    ```
