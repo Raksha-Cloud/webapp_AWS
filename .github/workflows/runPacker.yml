@@ -1,3 +1,5 @@
+
+
 name: CI/CD for creating AMI on merge of a PR
 on:
   push:
@@ -39,25 +41,82 @@ jobs:
       - name: 3. Configure the IAM user Credentials set up in github secrets
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_IDD }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEYY }}
           aws-region: us-east-1
+          
       - name: 4. run Packer Init
         uses: hashicorp/packer-github-actions@master
         with:
           command: init
           target: ami.pkr.hcl
+          
       - name: 5. Validate the packer template
         uses: hashicorp/packer-github-actions@master
         with:
           command: validate
           arguments: -syntax-only
           target: ami.pkr.hcl
+          
       - name: 6. create Custom AMI from Packer Build and upload the zipped artifacts
         uses: hashicorp/packer-github-actions@master
         with:
           command: build
           arguments: "-color=false -on-error=abort"
           target: ami.pkr.hcl
+          
+  CI_CD_for_webapp:
+    needs: packer_ami_build
+    runs-on: ubuntu-latest
+    name: To update the launch template for auto scaling group with new AMI ID
+    steps: 
+      - name: 1. Configure the IAM user Credentials set up in github secrets
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: 2. Get the latest AMI ID
+        run: |
+          AMI_ID=$(aws ec2 describe-images \
+          --owners ${{ secrets.AWS_AccountID }} \
+          --query 'sort_by(Images,&CreationDate)[-1].ImageId')
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          
+      - name: 3. Get the latest Launch template ID
+        run: |
+          LT_ID=$(aws ec2 describe-launch-templates \
+          --query 'sort_by(LaunchTemplates,&CreateTime)[-1].LaunchTemplateId')
+          echo "LT_ID=$LT_ID" >> $GITHUB_ENV
+          
+      - name: 4. Get the auto scaling group name
+        if: ${{ env.LT_ID != 'null' }}
+        run: |
+          ASG_Name=$(aws autoscaling describe-auto-scaling-groups \
+          --query 'sort_by(AutoScalingGroups,&CreatedTime)[-1].AutoScalingGroupName')
+          echo "ASG_Name=$ASG_Name" >> $GITHUB_ENV
+          echo "${{ env.ASG_Name }}"
+          
+      - name: 5. Creating new launch template version with latest AMI ID
+        if: ${{ env.LT_ID != 'null' }}
+        run: |
+          aws ec2 create-launch-template-version --launch-template-id ${{ env.LT_ID }} --version-description newVersion \
+          --source-version 1 --launch-template-data "ImageId=${{ env.AMI_ID }}"
+          
+      - name: 6. Updating the autoscaling group to use the new Launch Template
+        if: ${{ env.LT_ID != 'null' }}
+        run: |
+          aws autoscaling update-auto-scaling-group \
+          --auto-scaling-group-name ${{ env.ASG_Name }} \
+          --launch-template LaunchTemplateName=asg_launch_config,Version='$Latest' 
+          
+      - name: 7. Performing an instance refresh to the auto-scale group
+        if: ${{ env.LT_ID != 'null' }}
+        run: |
+          aws autoscaling start-instance-refresh --auto-scaling-group-name ${{ env.ASG_Name }}
+          
         env:
           PACKER_LOG: 1
+
+  

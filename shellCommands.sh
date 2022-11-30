@@ -7,6 +7,18 @@ echo "###################################Installing the cloudwatch agent config 
 sudo curl -o /root/amazon-cloudwatch-agent.deb https://s3.amazonaws.com/amazoncloudwatch-agent/debian/amd64/latest/amazon-cloudwatch-agent.deb
 sudo dpkg -i -E /root/amazon-cloudwatch-agent.deb
 
+echo "Downloading SSL certificate bundle for Postgres SQL"
+ sudo wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+ echo "To check if the global-bundle.pem file is downloaded"
+ ls global-bundle.pem
+ if [ $? -eq 0 ]; then
+     echo "global-bundle.pem file downloaded successfully"
+ else
+     echo "global-bundle.pem file not downloaded"
+     exit 1
+ fi
+
+
 echo "###################################Installing node##################"
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt-get install nodejs -y
