@@ -5,7 +5,7 @@ const fileController = require('../Controller/fileController.js');
 const multer = require('multer');
 const upload = multer({ dest: __dirname + '/uploads/' });
 //routes for accounts endpoints
-router.post('/v1/account', accountController.addAccount);
+router.post('/v2/account', accountController.addAccount);
 router.get('/v1/account/:id', accountController.findAccountById);
 router.put('/v1/account/:id', accountController.updateAccount);
 
